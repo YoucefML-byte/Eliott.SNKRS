@@ -22,6 +22,8 @@ export interface ProductImage {
   view: ImageView;
   /** real photo; when absent the studio render is used */
   src?: string;
+  /** caption in the gallery, e.g. "Vue avant" */
+  label?: string;
 }
 
 export interface SizeOption {
@@ -54,7 +56,7 @@ export interface Product {
   featured?: boolean;
 }
 
-export type BrandId = "nike" | "jordan" | "new-balance" | "adidas" | "off-white" | "sacai" | "nocta";
+export type BrandId = "nike" | "jordan" | "new-balance" | "adidas" | "prada" | "maison-margiela";
 
 export interface Brand {
   id: BrandId;

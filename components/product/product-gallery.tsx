@@ -4,13 +4,14 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRef, useState } from "react";
 
-import type { Product } from "@/data/types";
+import type { Product, ProductImage as ProductImageType } from "@/data/types";
 import { cn } from "@/lib/utils";
 
 import { ProductBadges } from "./condition-badge";
 import { ProductImage } from "./product-image";
 
 const VIEW_LABEL = { side: "Profil", pair: "La paire", detail: "Détail", medial: "Intérieur" };
+const labelOf = (img: ProductImageType) => img.label ?? VIEW_LABEL[img.view];
 
 export function ProductGallery({ product }: { product: Product }) {
   const [index, setIndex] = useState(0);
@@ -33,9 +34,9 @@ export function ProductGallery({ product }: { product: Product }) {
           onScroll={onScroll}
           className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto"
         >
-          {images.map((img) => (
+          {images.map((img, i) => (
             <ProductImage
-              key={img.view}
+              key={i}
               product={product}
               image={img}
               className="aspect-square w-full shrink-0 snap-center"
@@ -46,9 +47,9 @@ export function ProductGallery({ product }: { product: Product }) {
           <ProductBadges product={product} />
         </div>
         <div className="absolute inset-x-0 bottom-4 flex justify-center gap-1.5">
-          {images.map((img, i) => (
+          {images.map((_, i) => (
             <span
-              key={img.view}
+              key={i}
               className={cn(
                 "h-1 rounded-full transition-all",
                 i === index ? "w-5 bg-tile-ink" : "w-1.5 bg-tile-ink/30",
@@ -82,7 +83,7 @@ export function ProductGallery({ product }: { product: Product }) {
               <ChevronLeft className="size-4" />
             </button>
             <span className="label rounded-sm bg-white/70 px-2 py-1 text-tile-ink">
-              {index + 1} / {images.length} · {VIEW_LABEL[images[index].view]}
+              {index + 1} / {images.length} · {labelOf(images[index])}
             </span>
             <button
               onClick={() => go(index + 1)}
@@ -93,12 +94,12 @@ export function ProductGallery({ product }: { product: Product }) {
             </button>
           </div>
         </div>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${images.length}, minmax(0, 1fr))` }}>
           {images.map((img, i) => (
             <button
-              key={img.view}
+              key={i}
               onClick={() => setIndex(i)}
-              aria-label={`Voir : ${VIEW_LABEL[img.view]}`}
+              aria-label={`Voir : ${labelOf(img)}`}
               aria-current={i === index}
               className={cn(
                 "overflow-hidden rounded-md ring-1 ring-transparent transition",

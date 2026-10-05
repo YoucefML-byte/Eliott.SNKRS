@@ -36,7 +36,7 @@ export const GRADES = [
 
 export const COLLABS = [
   { name: "Travis Scott", query: "travis" },
+  { name: "Corteiz", query: "corteiz" },
+  { name: "NOCTA", query: "nocta" },
   { name: "Off-White", query: "off-white" },
-  { name: "Union", query: "union" },
-  { name: "Patta", query: "patta" },
 ];
