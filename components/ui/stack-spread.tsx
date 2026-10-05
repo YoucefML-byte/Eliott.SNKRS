@@ -14,17 +14,19 @@ import {
 } from "motion/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
+import { asset } from "@/lib/asset";
+
 // Sneaker-brand logos, served from /public/brands
 // (regenerate with `node scripts/generate-brand-logos.mjs`).
 const LOGO = {
-  nike: "/brands/nike.svg",
-  offWhite: "/brands/off-white.svg",
-  jordan: "/brands/jordan.svg",
-  sbDunk: "/brands/sb-dunk.svg",
-  adidas: "/brands/adidas.svg",
-  newBalance: "/brands/new-balance.svg",
-  puma: "/brands/puma.svg",
-  reebok: "/brands/reebok.svg",
+  nike: asset("/brands/nike.svg"),
+  offWhite: asset("/brands/off-white.svg"),
+  jordan: asset("/brands/jordan.svg"),
+  sbDunk: asset("/brands/sb-dunk.svg"),
+  adidas: asset("/brands/adidas.svg"),
+  newBalance: asset("/brands/new-balance.svg"),
+  puma: asset("/brands/puma.svg"),
+  reebok: asset("/brands/reebok.svg"),
 } as const;
 
 // per-image rest scale, keyed by img index (1-8). default 1, drop below to shrink.

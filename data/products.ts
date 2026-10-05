@@ -1,3 +1,5 @@
+import { asset } from "@/lib/asset";
+
 import type { Product, SizeOption } from "./types";
 
 // Catalogue de démonstration : uniquement les paires fournies avec photos.
@@ -24,7 +26,7 @@ type Seed = Omit<Product, "images">;
 /** `views`: how many of the views above exist for this pair (1 = profile only) */
 const photoProduct = (seed: Seed, views: number = PHOTO_VIEWS.length): Product => ({
   ...seed,
-  images: PHOTO_VIEWS.slice(0, views).map((v, i) => ({ ...v, src: `/products/${seed.slug}/${i + 1}.webp` })),
+  images: PHOTO_VIEWS.slice(0, views).map((v, i) => ({ ...v, src: asset(`/products/${seed.slug}/${i + 1}.webp`) })),
 });
 
 export const PRODUCTS: Product[] = [
