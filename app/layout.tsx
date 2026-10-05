@@ -11,7 +11,7 @@ const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"
 
 export const metadata: Metadata = {
   title: { default: "Eliott SNKRS — Sneakers neuves et occasion", template: "%s · Eliott SNKRS" },
-  description: "Dunk SB, Jordan, New Balance et collabs : des paires authentifiées, notées et expédiées sous 48 h.",
+  description: "Jordan, Nike, Prada, Margiela et collabs : des paires authentifiées, notées et expédiées sous 48 h.",
 };
 
 export const viewport: Viewport = { themeColor: "#ffffff" };

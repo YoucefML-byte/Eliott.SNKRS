@@ -56,7 +56,7 @@ export interface Product {
   featured?: boolean;
 }
 
-export type BrandId = "nike" | "jordan" | "new-balance" | "adidas" | "prada" | "maison-margiela";
+export type BrandId = "nike" | "jordan" | "asics" | "prada" | "maison-margiela";
 
 export interface Brand {
   id: BrandId;

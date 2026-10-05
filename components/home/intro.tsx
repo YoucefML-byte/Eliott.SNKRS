@@ -21,8 +21,8 @@ export function Intro() {
             Les paires qu&apos;on ne trouve plus en boutique.
           </h1>
           <p className="mt-6 max-w-[52ch] text-lg leading-relaxed text-muted">
-            Dunk SB, Jordan, collabs Travis Scott ou Off-White : chaque paire est vérifiée par Eliott, notée sur
-            10 et expédiée sous 48 h.
+            Collabs Travis Scott, Off-White ou Corteiz, Prada, Margiela : chaque paire est vérifiée par Eliott,
+            notée sur 10 et expédiée sous 48 h.
           </p>
           <div className="mt-10 flex flex-wrap gap-3">
             <Link href="/catalogue" className={buttonVariants({ size: "lg" })}>

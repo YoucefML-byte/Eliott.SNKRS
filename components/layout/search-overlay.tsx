@@ -11,7 +11,7 @@ import { brandName } from "@/data/brands";
 import { formatPrice } from "@/lib/format";
 import { searchProducts } from "@/lib/products";
 
-const SUGGESTIONS = ["Travis Scott", "Dunk SB", "Jordan 4", "2002R", "Off-White", "Samba"];
+const SUGGESTIONS = ["Travis Scott", "Off-White", "Corteiz", "NOCTA", "Kayano", "Prada"];
 
 export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
