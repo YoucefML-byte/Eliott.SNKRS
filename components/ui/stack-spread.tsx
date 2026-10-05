@@ -116,6 +116,12 @@ const CARDS: StackSpreadCard[] = [
   },
 ];
 
+const DEFAULT_TITLE = (
+  <>
+    Eliott <span className="opacity-60">SNKRS</span>
+  </>
+);
+
 // ---------------------------------------------------------------------------
 // Mechanism
 // ---------------------------------------------------------------------------
@@ -354,6 +360,10 @@ interface StackSpreadStageProps {
   showScrollHint?: boolean;
   /** element painted behind the stage (e.g. an animated gradient), fills the viewport */
   background?: ReactNode;
+  /** centre headline */
+  title?: ReactNode;
+  /** px kept clear above the sticky stage (e.g. a sticky site header) */
+  stickyTop?: number;
 }
 
 function StackSpreadStage({
@@ -367,6 +377,8 @@ function StackSpreadStage({
   textFadeStart = 0.3,
   showScrollHint = true,
   background,
+  title = DEFAULT_TITLE,
+  stickyTop = 0,
 }: StackSpreadStageProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
@@ -407,7 +419,10 @@ function StackSpreadStage({
       className="relative w-full"
       style={{ height: `${scrollLength}vh`, backgroundColor: bgColor }}
     >
-      <div className="sticky top-0 h-screen w-full overflow-hidden">
+      <div
+        className="sticky w-full overflow-hidden"
+        style={{ top: stickyTop, height: `calc(100vh - ${stickyTop}px)` }}
+      >
         {background && <div className="absolute inset-0 z-0">{background}</div>}
 
         {/* centre text */}
@@ -422,7 +437,7 @@ function StackSpreadStage({
             className="w-full text-[4.5vw] font-normal leading-none! tracking-tight max-md:text-[10vw]"
             style={{ color: textColor }}
           >
-            Eliott <span className="opacity-60">SNKRS</span>
+            {title}
           </h2>
         </motion.div>
 
@@ -495,6 +510,10 @@ export interface StackSpreadProps {
   showScrollHint?: boolean;
   /** element painted behind the stage (e.g. an animated gradient), fills the viewport */
   background?: ReactNode;
+  /** centre headline */
+  title?: ReactNode;
+  /** px kept clear above the sticky stage (e.g. a sticky site header) */
+  stickyTop?: number;
 }
 
 export default function StackSpread({
@@ -508,6 +527,8 @@ export default function StackSpread({
   textFadeStart = 0.3,
   showScrollHint = true,
   background,
+  title,
+  stickyTop,
 }: StackSpreadProps) {
   return (
     <StackSpreadStage
@@ -521,6 +542,8 @@ export default function StackSpread({
       textFadeStart={textFadeStart}
       showScrollHint={showScrollHint}
       background={background}
+      title={title}
+      stickyTop={stickyTop}
     />
   );
 }

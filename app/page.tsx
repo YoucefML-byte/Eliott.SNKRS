@@ -1,9 +1,5 @@
-import StackSpreadDemo from "@/components/ui/stack-spread-demo";
+import { HomePage } from "@/components/home/home-page";
 
-export default function Home() {
-  return (
-    <main>
-      <StackSpreadDemo />
-    </main>
-  );
+export default function Page() {
+  return <HomePage />;
 }

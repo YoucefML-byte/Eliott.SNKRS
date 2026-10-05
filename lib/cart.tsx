@@ -1,0 +1,193 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  type ReactNode,
+} from "react";
+
+import type { Product, SizeOption } from "@/data/types";
+
+import { getProduct } from "./products";
+
+// Panier simulé : tout reste dans le navigateur (localStorage), aucun backend.
+
+export interface CartLine {
+  slug: string;
+  size: string;
+  qty: number;
+}
+
+export interface ResolvedLine extends CartLine {
+  product: Product;
+  option: SizeOption;
+  total: number;
+}
+
+export interface Order {
+  number: string;
+  lines: ResolvedLine[];
+  subtotal: number;
+  shipping: { label: string; price: number };
+  total: number;
+  email: string;
+  name: string;
+  address: string;
+}
+
+type State = { lines: CartLine[]; open: boolean; ready: boolean; lastOrder: Order | null };
+
+type Action =
+  | { type: "hydrate"; lines: CartLine[]; lastOrder: Order | null }
+  | { type: "add"; slug: string; size: string }
+  | { type: "qty"; slug: string; size: string; qty: number }
+  | { type: "remove"; slug: string; size: string }
+  | { type: "open"; open: boolean }
+  | { type: "order"; order: Order };
+
+const KEY = "eliott-cart-v1";
+const ORDER_KEY = "eliott-order-v1";
+
+const same = (l: CartLine, slug: string, size: string) => l.slug === slug && l.size === size;
+
+const stockOf = (slug: string, size: string) =>
+  getProduct(slug)?.sizes.find((s) => s.size === size)?.stock ?? 0;
+
+function reducer(state: State, a: Action): State {
+  switch (a.type) {
+    case "hydrate":
+      return { ...state, lines: a.lines, lastOrder: a.lastOrder, ready: true };
+    case "add": {
+      const max = stockOf(a.slug, a.size);
+      const existing = state.lines.find((l) => same(l, a.slug, a.size));
+      const lines = existing
+        ? state.lines.map((l) =>
+            same(l, a.slug, a.size) ? { ...l, qty: Math.min(l.qty + 1, max) } : l,
+          )
+        : [...state.lines, { slug: a.slug, size: a.size, qty: 1 }];
+      return { ...state, lines, open: true };
+    }
+    case "qty": {
+      const qty = Math.max(1, Math.min(a.qty, stockOf(a.slug, a.size)));
+      return {
+        ...state,
+        lines: state.lines.map((l) => (same(l, a.slug, a.size) ? { ...l, qty } : l)),
+      };
+    }
+    case "remove":
+      return { ...state, lines: state.lines.filter((l) => !same(l, a.slug, a.size)) };
+    case "open":
+      return { ...state, open: a.open };
+    case "order":
+      return { ...state, lines: [], open: false, lastOrder: a.order };
+  }
+}
+
+function resolve(lines: CartLine[]): ResolvedLine[] {
+  return lines.flatMap((l) => {
+    const product = getProduct(l.slug);
+    const option = product?.sizes.find((s) => s.size === l.size);
+    if (!product || !option) return [];
+    return [{ ...l, product, option, total: product.price * l.qty }];
+  });
+}
+
+function read<T>(storage: () => Storage, key: string, fallback: T): T {
+  try {
+    const raw = storage().getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function write(storage: () => Storage, key: string, value: unknown) {
+  try {
+    storage().setItem(key, JSON.stringify(value));
+  } catch {
+    // stockage indisponible (navigation privée) : le panier reste en mémoire
+  }
+}
+
+interface CartApi {
+  lines: ResolvedLine[];
+  count: number;
+  subtotal: number;
+  open: boolean;
+  ready: boolean;
+  lastOrder: Order | null;
+  add: (slug: string, size: string) => void;
+  setQty: (slug: string, size: string, qty: number) => void;
+  remove: (slug: string, size: string) => void;
+  setOpen: (open: boolean) => void;
+  placeOrder: (order: Omit<Order, "lines" | "subtotal" | "number" | "total">) => Order;
+}
+
+const CartContext = createContext<CartApi | null>(null);
+
+export function CartProvider({ children }: { children: ReactNode }) {
+  const [state, dispatch] = useReducer(reducer, {
+    lines: [],
+    open: false,
+    ready: false,
+    lastOrder: null,
+  });
+
+  useEffect(() => {
+    dispatch({
+      type: "hydrate",
+      lines: read(() => localStorage, KEY, []),
+      lastOrder: read(() => sessionStorage, ORDER_KEY, null),
+    });
+  }, []);
+
+  useEffect(() => {
+    if (state.ready) write(() => localStorage, KEY, state.lines);
+  }, [state.lines, state.ready]);
+
+  const lines = useMemo(() => resolve(state.lines), [state.lines]);
+  const subtotal = lines.reduce((n, l) => n + l.total, 0);
+  const count = lines.reduce((n, l) => n + l.qty, 0);
+
+  const placeOrder = useCallback<CartApi["placeOrder"]>(
+    (details) => {
+      const order: Order = {
+        ...details,
+        number: `ES-${Math.floor(10000 + Math.random() * 89999)}`,
+        lines,
+        subtotal,
+        total: subtotal + details.shipping.price,
+      };
+      write(() => sessionStorage, ORDER_KEY, order);
+      dispatch({ type: "order", order });
+      return order;
+    },
+    [lines, subtotal],
+  );
+
+  const api: CartApi = {
+    lines,
+    count,
+    subtotal,
+    open: state.open,
+    ready: state.ready,
+    lastOrder: state.lastOrder,
+    add: (slug, size) => dispatch({ type: "add", slug, size }),
+    setQty: (slug, size, qty) => dispatch({ type: "qty", slug, size, qty }),
+    remove: (slug, size) => dispatch({ type: "remove", slug, size }),
+    setOpen: (open) => dispatch({ type: "open", open }),
+    placeOrder,
+  };
+
+  return <CartContext.Provider value={api}>{children}</CartContext.Provider>;
+}
+
+export function useCart() {
+  const ctx = useContext(CartContext);
+  if (!ctx) throw new Error("useCart must be used inside <CartProvider>");
+  return ctx;
+}
