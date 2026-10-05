@@ -102,7 +102,7 @@ export function ProductGallery({ product }: { product: Product }) {
               aria-current={i === index}
               className={cn(
                 "overflow-hidden rounded-md ring-1 ring-transparent transition",
-                i === index ? "ring-acc" : "opacity-60 hover:opacity-100",
+                i === index ? "ring-acc" : "hover:ring-dim",
               )}
             >
               <ProductImage product={product} image={img} className="aspect-[5/4]" />

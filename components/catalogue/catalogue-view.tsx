@@ -96,7 +96,7 @@ export function CatalogueView() {
         </aside>
 
         <div>
-          <div className="mb-6 flex min-h-10 flex-wrap items-center gap-2">
+          <div className={`mb-6 min-h-10 flex-wrap items-center gap-2 ${chips.length ? "flex" : "hidden md:flex"}`}>
             {chips.map((c) => (
               <button
                 key={c.label}

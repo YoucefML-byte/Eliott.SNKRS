@@ -35,15 +35,15 @@ export function ProductCard({ product, className }: { product: Product; classNam
         <ProductBadges product={product} />
       </div>
 
-      <div className="mt-3 flex items-start justify-between gap-3">
+      <div className="mt-3 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div className="min-w-0">
           <p className="label text-muted">{brandName(product.brand)}</p>
-          <h3 className="mt-1 truncate text-[15px] font-medium leading-snug text-ink transition-colors group-hover:text-acc">
+          <h3 className="mt-1 line-clamp-2 text-[15px] font-medium leading-snug text-ink transition-colors group-hover:text-acc sm:line-clamp-1">
             {product.name}
           </h3>
           <p className="truncate text-sm text-muted">{product.colorway}</p>
         </div>
-        <p className="shrink-0 pt-[18px] font-mono text-[15px] tabular-nums">{formatPrice(product.price)}</p>
+        <p className="shrink-0 font-mono text-[15px] tabular-nums sm:pt-[18px]">{formatPrice(product.price)}</p>
       </div>
 
       <p className="mt-2 truncate font-mono text-[11px] tracking-wide text-dim">

@@ -52,15 +52,21 @@ export function ProductView({ product }: { product: Product }) {
         <ProductGallery product={product} />
 
         <div className="md:sticky md:top-24 md:self-start">
-          <p className="label text-acc">{product.collab ?? brandName(product.brand)}</p>
+          <p className="label text-acc">
+            {brandName(product.brand)}
+            {product.collab && <span className="text-muted"> × {product.collab}</span>}
+          </p>
           <h1 className="mt-3 font-display text-[40px] font-medium uppercase leading-[0.95] tracking-tight md:text-[52px]">
-            {brandName(product.brand)} {product.name}
+            {product.name}
           </h1>
           <p className="mt-3 text-lg text-muted">{product.colorway}</p>
 
-          <div className="mt-6 flex items-baseline justify-between border-y border-line py-4">
-            <Price value={product.price} retail={product.retail} className="text-2xl" />
-            <span className="label text-dim">Sortie {product.releaseYear}</span>
+          <div className="mt-6 flex items-end justify-between border-y border-line py-4">
+            <Price value={product.price} className="text-[28px] leading-none" />
+            <span className="label text-right leading-relaxed text-dim">
+              {product.retail != null && <>Prix de sortie {formatPrice(product.retail)}<br /></>}
+              Sortie {product.releaseYear}
+            </span>
           </div>
 
           <div className="mt-8">
@@ -78,7 +84,7 @@ export function ProductView({ product }: { product: Product }) {
           </div>
 
           <div className="mt-6 hidden gap-3 md:grid">
-            <Button size="lg" onClick={add} disabled={!size || sold}>
+            <Button size="lg" variant={size && !sold ? "primary" : "outline"} onClick={add} disabled={!size || sold}>
               {added && <Check className="size-4" />}
               {cta}
             </Button>
@@ -147,7 +153,12 @@ export function ProductView({ product }: { product: Product }) {
             <p className="truncate text-sm">{size ? `EU ${size}` : "Pointure ?"}</p>
             <p className="font-mono text-sm tabular-nums text-muted">{formatPrice(product.price)}</p>
           </div>
-          <Button onClick={add} disabled={!size || sold} className="h-12 flex-[2]">
+          <Button
+            variant={size && !sold ? "primary" : "outline"}
+            onClick={add}
+            disabled={!size || sold}
+            className="h-12 flex-[2]"
+          >
             {added && <Check className="size-4" />}
             {cta}
           </Button>
