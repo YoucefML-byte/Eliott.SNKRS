@@ -130,8 +130,6 @@ const PARALLAX_SPRING = { stiffness: 90, damping: 22, mass: 0.6 };
 const parallaxDepth = (i: number, total: number) =>
   total <= 1 ? 1 : 0.55 + (i / (total - 1)) * 0.75;
 
-const SUB = "Digital products, interfaces, and experiences built around people.";
-
 const RESPONSIVE = {
   desktop: {
     scale: null as number | null,
@@ -421,23 +419,11 @@ function StackSpreadStage({
           }}
         >
           <h2
-            className="w-full whitespace-pre-line text-[4.5vw] font-normal leading-none! tracking-tight max-md:text-[10vw]"
+            className="w-full text-[4.5vw] font-normal leading-none! tracking-tight max-md:text-[10vw]"
             style={{ color: textColor }}
           >
-            Design
-
-           <span className="opacity-60"> {" "}
-              That
-               {" "}
-              </span>
-              Responds.
+            Eliott <span className="opacity-60">SNKRS</span>
           </h2>
-          <p
-            className="mt-[1.2vw] w-full max-w-[42ch] text-[1.15vw] leading-relaxed tracking-tight max-md:mt-3 max-md:text-[3.6vw]"
-            style={{ color: textColor, opacity: 0.6 }}
-          >
-            {SUB}
-          </p>
         </motion.div>
 
         {/* scattering cards */}
