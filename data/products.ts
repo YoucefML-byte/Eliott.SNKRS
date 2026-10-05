@@ -21,9 +21,10 @@ const PHOTO_VIEWS = [
 ] as const;
 
 type Seed = Omit<Product, "images">;
-const photoProduct = (seed: Seed): Product => ({
+/** `views`: how many of the views above exist for this pair (1 = profile only) */
+const photoProduct = (seed: Seed, views: number = PHOTO_VIEWS.length): Product => ({
   ...seed,
-  images: PHOTO_VIEWS.map((v, i) => ({ ...v, src: `/products/${seed.slug}/${i + 1}.webp` })),
+  images: PHOTO_VIEWS.slice(0, views).map((v, i) => ({ ...v, src: `/products/${seed.slug}/${i + 1}.webp` })),
 });
 
 export const PRODUCTS: Product[] = [
@@ -150,6 +151,32 @@ export const PRODUCTS: Product[] = [
       "Tige texturée façon vagues, verni noir et bulle Air visible. La deuxième collaboration running de Drake avec Nike.",
     featured: true,
   }),
+  photoProduct(
+    {
+      slug: "new-balance-2002r-protection-pack-pink",
+      name: "2002R",
+      brand: "new-balance",
+      colorway: "Protection Pack · Rose / Bordeaux",
+      silhouette: "runner",
+      colors: {
+        upper: "#c98ea0",
+        overlay: "#8c2f55",
+        accent: "#f2dde3",
+        midsole: "#f1ece2",
+        outsole: "#5c3a4a",
+        laces: "#f4f1ea",
+        lining: "#d8a7b5",
+      },
+      price: 219,
+      retail: 160,
+      sizes: [neuf("38"), occ("40", 9)],
+      arrivedAt: "2026-09-13",
+      releaseYear: 2022,
+      description:
+        "Suède effiloché aux bords bruts dans des tons rose et bordeaux : le Protection Pack, la série qui a relancé la 2002R.",
+    },
+    1,
+  ),
   photoProduct({
     slug: "prada-americas-cup-red",
     name: "America's Cup",

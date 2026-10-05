@@ -27,11 +27,13 @@ export function ProductCard({ product, className }: { product: Product; classNam
           artClassName="transition-transform duration-500 ease-out group-hover:-translate-y-1 group-hover:scale-[1.04]"
         />
         {/* second angle on hover (pointer devices) */}
-        <ProductImage
-          product={product}
-          image={product.images[1]}
-          className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 [@media(hover:hover)]:group-hover:opacity-100"
-        />
+        {product.images[1] && (
+          <ProductImage
+            product={product}
+            image={product.images[1]}
+            className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 [@media(hover:hover)]:group-hover:opacity-100"
+          />
+        )}
         <ProductBadges product={product} />
       </div>
 

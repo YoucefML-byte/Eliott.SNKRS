@@ -18,6 +18,7 @@ export function ProductGallery({ product }: { product: Product }) {
   const strip = useRef<HTMLDivElement>(null);
   const images = product.images;
   const go = (i: number) => setIndex((i + images.length) % images.length);
+  const multiple = images.length > 1;
 
   // mobile: swipeable strip, the dots follow the scroll position
   const onScroll = () => {
@@ -46,7 +47,7 @@ export function ProductGallery({ product }: { product: Product }) {
         <div className="pointer-events-none absolute inset-x-0 top-0">
           <ProductBadges product={product} />
         </div>
-        <div className="absolute inset-x-0 bottom-4 flex justify-center gap-1.5">
+        <div className={cn("absolute inset-x-0 bottom-4 flex justify-center gap-1.5", !multiple && "hidden")}>
           {images.map((_, i) => (
             <span
               key={i}
@@ -74,7 +75,12 @@ export function ProductGallery({ product }: { product: Product }) {
             </motion.div>
           </AnimatePresence>
           <ProductBadges product={product} />
-          <div className="absolute inset-x-3 bottom-3 flex items-center justify-between opacity-0 transition-opacity group-hover:opacity-100">
+          <div
+            className={cn(
+              "absolute inset-x-3 bottom-3 flex items-center justify-between opacity-0 transition-opacity group-hover:opacity-100",
+              !multiple && "hidden",
+            )}
+          >
             <button
               onClick={() => go(index - 1)}
               aria-label="Image précédente"
@@ -94,7 +100,10 @@ export function ProductGallery({ product }: { product: Product }) {
             </button>
           </div>
         </div>
-        <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${images.length}, minmax(0, 1fr))` }}>
+        <div
+          className={cn("grid gap-3", !multiple && "hidden")}
+          style={{ gridTemplateColumns: `repeat(${images.length}, minmax(0, 1fr))` }}
+        >
           {images.map((img, i) => (
             <button
               key={i}
