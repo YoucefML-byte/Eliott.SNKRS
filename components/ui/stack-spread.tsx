@@ -12,7 +12,7 @@ import {
   useMotionValueEvent,
   type MotionValue,
 } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 // Sneaker-brand logos, served from /public/brands
 // (regenerate with `node scripts/generate-brand-logos.mjs`).
@@ -354,6 +354,8 @@ interface StackSpreadStageProps {
   textFadeStart?: number;
   /** show the "scroll to spread" hint at the bottom until the scatter begins */
   showScrollHint?: boolean;
+  /** element painted behind the stage (e.g. an animated gradient), fills the viewport */
+  background?: ReactNode;
 }
 
 function StackSpreadStage({
@@ -366,6 +368,7 @@ function StackSpreadStage({
   textColor = "#141414",
   textFadeStart = 0.3,
   showScrollHint = true,
+  background,
 }: StackSpreadStageProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
@@ -407,6 +410,8 @@ function StackSpreadStage({
       style={{ height: `${scrollLength}vh`, backgroundColor: bgColor }}
     >
       <div className="sticky top-0 h-screen w-full overflow-hidden">
+        {background && <div className="absolute inset-0 z-0">{background}</div>}
+
         {/* centre text */}
         <motion.div
           className="pointer-events-none absolute inset-0 z-[5] flex flex-col items-center justify-center px-6 text-center max-md:px-8"
@@ -502,6 +507,8 @@ export interface StackSpreadProps {
   textFadeStart?: number;
   /** show the "scroll to spread" hint at the bottom until the scatter begins */
   showScrollHint?: boolean;
+  /** element painted behind the stage (e.g. an animated gradient), fills the viewport */
+  background?: ReactNode;
 }
 
 export default function StackSpread({
@@ -514,6 +521,7 @@ export default function StackSpread({
   textColor = "#141414",
   textFadeStart = 0.3,
   showScrollHint = true,
+  background,
 }: StackSpreadProps) {
   return (
     <StackSpreadStage
@@ -526,6 +534,7 @@ export default function StackSpread({
       textColor={textColor}
       textFadeStart={textFadeStart}
       showScrollHint={showScrollHint}
+      background={background}
     />
   );
 }
