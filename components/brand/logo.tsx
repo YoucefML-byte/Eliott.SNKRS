@@ -19,7 +19,7 @@ export function LogoMark({ className }: { className?: string }) {
 export function Wordmark({ className }: { className?: string }) {
   return (
     <span className={cn("font-display text-[22px] font-semibold leading-none tracking-[0.01em]", className)}>
-      eliott<span className="text-acc">.</span>snkrs
+      eliott<span className="text-acc-ink">.</span>snkrs
     </span>
   );
 }

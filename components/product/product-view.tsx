@@ -52,7 +52,7 @@ export function ProductView({ product }: { product: Product }) {
         <ProductGallery product={product} />
 
         <div className="md:sticky md:top-24 md:self-start">
-          <p className="label text-acc">
+          <p className="label text-acc-ink">
             {brandName(product.brand)}
             {product.collab && <span className="text-muted"> × {product.collab}</span>}
           </p>
@@ -101,15 +101,15 @@ export function ProductView({ product }: { product: Product }) {
 
           <ul className="mt-8 grid gap-3 text-sm text-muted">
             <li className="flex gap-3">
-              <ShieldCheck className="size-5 shrink-0 text-acc" />
+              <ShieldCheck className="size-5 shrink-0 text-acc-ink" />
               Authentifiée par Eliott avant l&apos;envoi, photos de la paire sur demande.
             </li>
             <li className="flex gap-3">
-              <Truck className="size-5 shrink-0 text-acc" />
+              <Truck className="size-5 shrink-0 text-acc-ink" />
               Expédiée sous 48 h, livraison offerte dès {formatPrice(SITE.freeShippingFrom)}.
             </li>
             <li className="flex gap-3">
-              <PackageCheck className="size-5 shrink-0 text-acc" />
+              <PackageCheck className="size-5 shrink-0 text-acc-ink" />
               Double boîte et emballage protégé.
             </li>
           </ul>
@@ -139,7 +139,7 @@ export function ProductView({ product }: { product: Product }) {
           <h2 className="font-display text-3xl font-medium uppercase tracking-tight md:text-4xl">
             Dans le même esprit
           </h2>
-          <Link href="/catalogue" className="label text-muted hover:text-acc">
+          <Link href="/catalogue" className="label text-muted hover:text-acc-ink">
             Tout le stock →
           </Link>
         </div>

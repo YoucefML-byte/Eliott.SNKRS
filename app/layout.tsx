@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description: "Dunk SB, Jordan, New Balance et collabs : des paires authentifiées, notées et expédiées sous 48 h.",
 };
 
-export const viewport: Viewport = { themeColor: "#050a07" };
+export const viewport: Viewport = { themeColor: "#ffffff" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

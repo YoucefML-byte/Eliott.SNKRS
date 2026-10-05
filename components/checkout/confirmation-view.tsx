@@ -28,10 +28,10 @@ export function ConfirmationView() {
   return (
     <div className="mx-auto grid max-w-[1080px] gap-12 px-4 pb-24 pt-12 md:px-8 md:pt-20 lg:grid-cols-[1fr_400px]">
       <div>
-        <span className="grid size-14 place-items-center rounded-full bg-acc text-ground">
+        <span className="grid size-14 place-items-center rounded-full bg-acc text-on-acc">
           <Check className="size-7" strokeWidth={2.5} />
         </span>
-        <p className="label mt-8 text-acc">Commande {order.number}</p>
+        <p className="label mt-8 text-acc-ink">Commande {order.number}</p>
         <h1 className="mt-3 font-display text-5xl font-medium uppercase leading-none tracking-tight md:text-6xl">
           Merci {order.name.split(" ")[0]} !
         </h1>

@@ -49,7 +49,7 @@ export function CatalogueView() {
     <div className="mx-auto max-w-[1360px] px-4 pb-24 md:px-8">
       <div className="flex flex-col gap-6 pb-8 pt-10 md:flex-row md:items-end md:justify-between md:pt-16">
         <div>
-          <p className="label text-acc">Sneakers · neuves et occasion</p>
+          <p className="label text-acc-ink">Sneakers · neuves et occasion</p>
           <h1 className="mt-3 font-display text-5xl font-medium uppercase leading-none tracking-tight md:text-7xl">
             {title}
           </h1>
@@ -78,7 +78,7 @@ export function CatalogueView() {
       {/* mobile toolbar */}
       <div className="sticky top-16 z-30 -mx-4 mb-6 grid grid-cols-2 gap-2 border-y border-line bg-ground/95 px-4 py-2 backdrop-blur md:hidden">
         <Button variant="outline" onClick={() => setSheet(true)}>
-          <SlidersHorizontal className="size-4" /> Filtres{n > 0 && <span className="text-acc">({n})</span>}
+          <SlidersHorizontal className="size-4" /> Filtres{n > 0 && <span className="text-acc-ink">({n})</span>}
         </Button>
         <SortSelect value={filters.sort} onChange={(sort) => update({ ...filters, sort })} />
       </div>

@@ -8,9 +8,9 @@ const badgeVariants = cva(
   {
     variants: {
       tone: {
-        new: "bg-acc text-ground",
-        used: "bg-tile-ink/85 text-ink",
-        warm: "bg-warm text-ground",
+        new: "bg-acc text-on-acc",
+        used: "bg-tile-ink/85 text-white",
+        warm: "bg-warm text-tile-ink",
         muted: "bg-black/10 text-tile-ink",
         outline: "border border-line text-muted",
       },

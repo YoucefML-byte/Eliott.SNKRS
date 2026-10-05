@@ -52,7 +52,7 @@ export function FilterPanel({ filters, onChange }: { filters: Filters; onChange:
                 onClick={() => set({ sizes: toggle(filters.sizes, s) })}
                 className={cn(
                   "h-10 rounded-md border font-mono text-[13px] tabular-nums transition-colors",
-                  on ? "border-acc bg-acc text-ground" : "border-line text-muted hover:border-ink hover:text-ink",
+                  on ? "border-acc bg-acc text-on-acc" : "border-line text-muted hover:border-ink hover:text-ink",
                 )}
               >
                 {s}

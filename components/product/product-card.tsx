@@ -38,7 +38,7 @@ export function ProductCard({ product, className }: { product: Product; classNam
       <div className="mt-3 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div className="min-w-0">
           <p className="label text-muted">{brandName(product.brand)}</p>
-          <h3 className="mt-1 line-clamp-2 text-[15px] font-medium leading-snug text-ink transition-colors group-hover:text-acc sm:line-clamp-1">
+          <h3 className="mt-1 line-clamp-2 text-[15px] font-medium leading-snug text-ink transition-colors group-hover:text-acc-ink sm:line-clamp-1">
             {product.name}
           </h3>
           <p className="truncate text-sm text-muted">{product.colorway}</p>

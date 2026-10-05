@@ -38,7 +38,7 @@ export function SizeSelector({
             <span
               className={cn(
                 "mt-1 font-mono text-[10px] uppercase tracking-[0.1em]",
-                s.condition === "Neuf" ? "text-acc" : "text-muted",
+                s.condition === "Neuf" ? "text-acc-ink" : "text-muted",
               )}
             >
               {sold ? "Vendue" : s.condition === "Neuf" ? "Neuf" : `Occ. ${s.grade}/10`}

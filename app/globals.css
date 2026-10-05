@@ -3,8 +3,8 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Eliott SNKRS — identité reprise du site actuel :
-   fond vert-noir, vert néon en accent, Oswald / IBM Plex. */
+/* Eliott SNKRS — fond blanc, vert néon de la marque en accent
+   (aplats uniquement ; le texte vert utilise --acc-ink), Oswald / IBM Plex. */
 @theme inline {
   --color-ground: var(--ground);
   --color-surface: var(--surface);
@@ -14,7 +14,8 @@
   --color-muted: var(--muted);
   --color-dim: var(--dim);
   --color-acc: var(--acc);
-  --color-acc-dim: var(--acc-dim);
+  --color-acc-ink: var(--acc-ink);
+  --color-on-acc: var(--on-acc);
   --color-warm: var(--warm);
   --color-tile: var(--tile);
   --color-tile-ink: var(--tile-ink);
@@ -49,20 +50,23 @@
 }
 
 :root {
-  --ground: #050a07;
-  --surface: #0d140f;
-  --raised: #141c17;
-  --line: #1e2a22;
-  --ink: #e9f0eb;
-  --muted: #8a978f;
-  --dim: #56655c;
+  --ground: #ffffff;
+  --surface: #f5f6f4;
+  --raised: #eceeeb;
+  --line: #e2e5e2;
+  --ink: #0b100d;
+  --muted: #59645d;
+  --dim: #7c867f;
+  /* neon brand green: fills only */
   --acc: #00fc54;
-  --acc-dim: #00b93d;
-  --warm: #ffb05c;
+  /* readable green for text on white */
+  --acc-ink: #007f2a;
+  --on-acc: #04140a;
+  --warm: #ffa043;
   /* studio backdrop behind the sneakers */
-  --tile: #e4e8e5;
+  --tile: #eceeeb;
   --tile-ink: #0b120d;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 @layer base {
@@ -81,7 +85,7 @@
   }
   ::selection {
     background: var(--acc);
-    color: var(--ground);
+    color: var(--on-acc);
   }
 }
 

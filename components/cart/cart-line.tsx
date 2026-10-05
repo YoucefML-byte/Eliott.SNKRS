@@ -37,7 +37,7 @@ export function CartLineItem({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="label text-muted">{brandName(product.brand)}</p>
-            <Link href={href} onClick={onNavigate} className="mt-1 block truncate font-medium hover:text-acc">
+            <Link href={href} onClick={onNavigate} className="mt-1 block truncate font-medium hover:text-acc-ink">
               {product.name}
             </Link>
             <p className="truncate text-sm text-muted">{product.colorway}</p>

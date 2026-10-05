@@ -5,7 +5,7 @@ export function ConditionGuide() {
     <section id="etats" className="scroll-mt-20 border-y border-line bg-surface">
       <div className="mx-auto grid max-w-[1360px] gap-12 px-4 py-20 md:px-8 md:py-28 lg:grid-cols-[1fr_1.3fr] lg:gap-20">
         <div>
-          <p className="label text-acc">Neuf ou occasion</p>
+          <p className="label text-acc-ink">Neuf ou occasion</p>
           <h2 className="mt-3 font-display text-4xl font-medium uppercase leading-[0.95] tracking-tight md:text-6xl">
             Chaque paire a sa note.
           </h2>
@@ -17,7 +17,7 @@ export function ConditionGuide() {
         <ol className="grid gap-px overflow-hidden rounded-md border border-line bg-line">
           {GRADES.map((g) => (
             <li key={g.grade} className="grid grid-cols-[88px_1fr] items-center gap-4 bg-ground p-5 md:grid-cols-[120px_1fr_140px] md:p-6">
-              <span className={`font-display text-3xl font-medium uppercase md:text-4xl ${g.score === 10 ? "text-acc" : ""}`}>
+              <span className={`font-display text-3xl font-medium uppercase md:text-4xl ${g.score === 10 ? "text-acc-ink" : ""}`}>
                 {g.grade}
               </span>
               <p className="text-sm leading-relaxed text-muted md:text-[15px]">{g.text}</p>

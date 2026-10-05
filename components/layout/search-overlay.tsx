@@ -66,7 +66,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
                 <button
                   key={s}
                   onClick={() => setQ(s)}
-                  className="rounded-full border border-line px-4 py-2 text-sm hover:border-acc hover:text-acc"
+                  className="rounded-full border border-line px-4 py-2 text-sm hover:border-acc hover:text-acc-ink"
                 >
                   {s}
                 </button>
@@ -84,14 +84,14 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
                     <ProductImage product={p} className="size-16 shrink-0 rounded-sm" artClassName="w-[95%]" />
                     <div className="min-w-0 flex-1">
                       <p className="label text-muted">{brandName(p.brand)}</p>
-                      <p className="truncate group-hover:text-acc">{p.name} · {p.colorway}</p>
+                      <p className="truncate group-hover:text-acc-ink">{p.name} · {p.colorway}</p>
                     </div>
                     <span className="font-mono text-sm tabular-nums">{formatPrice(p.price)}</span>
                   </Link>
                 </li>
               ))}
             </ul>
-            <button onClick={() => submit(q)} className="label mt-6 inline-flex items-center gap-2 text-acc hover:underline">
+            <button onClick={() => submit(q)} className="label mt-6 inline-flex items-center gap-2 text-acc-ink hover:underline">
               Voir tous les résultats <ArrowRight className="size-3.5" />
             </button>
           </>

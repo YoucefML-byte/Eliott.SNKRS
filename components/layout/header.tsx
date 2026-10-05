@@ -49,7 +49,7 @@ export function Header() {
             <span className="flex items-center gap-2">
               <LogoMark className="size-7" />
               <span className="font-display text-xl font-semibold">
-                eliott<span className="text-acc">.</span>snkrs
+                eliott<span className="text-acc-ink">.</span>snkrs
               </span>
             </span>
           </Link>
@@ -73,7 +73,7 @@ export function Header() {
                     />
                   </Link>
                   {item.label === "Sneakers" && (
-                    <div className="invisible absolute left-1/2 top-full w-56 -translate-x-1/2 translate-y-1 rounded-md border border-line bg-surface p-2 opacity-0 shadow-2xl shadow-black/60 transition-all group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+                    <div className="invisible absolute left-1/2 top-full w-56 -translate-x-1/2 translate-y-1 rounded-md border border-line bg-surface p-2 opacity-0 shadow-xl shadow-black/10 transition-all group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
                       {BRANDS.map((b) => (
                         <Link
                           key={b.id}
@@ -112,7 +112,7 @@ export function Header() {
                     initial={{ scale: 0.4, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.4, opacity: 0 }}
-                    className="absolute right-1 top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-acc px-1 font-mono text-[10px] font-semibold text-ground"
+                    className="absolute right-1 top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-acc px-1 font-mono text-[10px] font-semibold text-on-acc"
                   >
                     {cart.count}
                   </motion.span>

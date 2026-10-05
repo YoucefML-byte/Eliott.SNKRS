@@ -59,7 +59,7 @@ export function Sheet({ open, onClose, side = "right", label, className, childre
       {open && (
         <div className="fixed inset-0 z-[60]">
           <motion.div
-            className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-black/35 backdrop-blur-[2px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

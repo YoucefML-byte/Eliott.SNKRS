@@ -8,11 +8,11 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-acc text-ground hover:bg-[#5dff8f]",
+        primary: "bg-acc text-on-acc hover:bg-[#5dff8f]",
         outline: "border border-line text-ink hover:border-ink",
         ghost: "text-ink hover:bg-raised",
-        light: "bg-ink text-ground hover:bg-white",
-        link: "h-auto px-0 text-ink underline-offset-4 hover:text-acc hover:underline",
+        light: "bg-ink text-ground hover:bg-ink/85",
+        link: "h-auto px-0 text-ink underline-offset-4 hover:text-acc-ink hover:underline",
       },
       size: {
         sm: "h-9 px-3",

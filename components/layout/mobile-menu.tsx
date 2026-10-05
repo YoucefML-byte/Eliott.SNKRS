@@ -26,7 +26,7 @@ export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => vo
               <Link
                 href={item.href}
                 onClick={onClose}
-                className="flex items-baseline justify-between border-b border-line py-4 font-display text-[34px] font-medium uppercase leading-none tracking-tight active:text-acc"
+                className="flex items-baseline justify-between border-b border-line py-4 font-display text-[34px] font-medium uppercase leading-none tracking-tight active:text-acc-ink"
               >
                 {item.label}
                 <span className="font-mono text-xs text-dim">0{i + 1}</span>
@@ -57,7 +57,7 @@ export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => vo
         rel="noopener noreferrer"
         className="flex items-center gap-3 border-t border-line px-4 pb-[calc(env(safe-area-inset-bottom)+20px)] pt-5 text-sm text-muted"
       >
-        <InstagramIcon className="text-acc" />@{SITE.instagram}
+        <InstagramIcon className="text-acc-ink" />@{SITE.instagram}
       </a>
     </Sheet>
   );

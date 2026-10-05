@@ -23,7 +23,7 @@ export function ProductImage({
     <div
       className={cn(
         "relative flex items-center justify-center overflow-hidden bg-tile",
-        "bg-[radial-gradient(120%_90%_at_50%_35%,#f1f3f1_0%,var(--tile)_60%,#d9ddda_100%)]",
+        "bg-[radial-gradient(120%_90%_at_50%_35%,#f8f9f8_0%,var(--tile)_60%,#e0e3e0_100%)]",
         className,
       )}
     >

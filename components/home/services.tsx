@@ -17,7 +17,7 @@ export function Services() {
       <ul className="grid gap-10 md:grid-cols-3 md:gap-8">
         {ITEMS.map(({ icon: Icon, title, text }) => (
           <li key={title} className="border-t border-line pt-6">
-            <Icon className="size-6 text-acc" strokeWidth={1.6} />
+            <Icon className="size-6 text-acc-ink" strokeWidth={1.6} />
             <h3 className="mt-5 font-display text-2xl font-medium uppercase">{title}</h3>
             <p className="mt-2 max-w-[34ch] text-muted">{text}</p>
           </li>
@@ -37,7 +37,7 @@ export function Services() {
           href={SITE.instagramDm}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex h-14 shrink-0 items-center gap-3 rounded-md bg-acc px-7 font-mono text-[13px] font-medium uppercase tracking-[0.14em] text-ground transition-colors hover:bg-[#5dff8f]"
+          className="inline-flex h-14 shrink-0 items-center gap-3 rounded-md bg-acc px-7 font-mono text-[13px] font-medium uppercase tracking-[0.14em] text-on-acc transition-colors hover:bg-[#5dff8f]"
         >
           <InstagramIcon /> @{SITE.instagram}
         </a>

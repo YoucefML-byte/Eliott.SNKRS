@@ -12,7 +12,7 @@ export function ShippingProgress({ subtotal }: { subtotal: number }) {
             Plus que <span className="font-mono text-ink">{formatPrice(left)}</span> pour la livraison offerte
           </>
         ) : (
-          <span className="text-acc">Livraison offerte sur cette commande</span>
+          <span className="text-acc-ink">Livraison offerte sur cette commande</span>
         )}
       </p>
       <div className="mt-2 h-1 overflow-hidden rounded-full bg-raised">

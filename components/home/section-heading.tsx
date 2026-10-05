@@ -15,13 +15,13 @@ export function SectionHeading({
   return (
     <div className="mb-8 flex items-end justify-between gap-6 md:mb-12">
       <div>
-        <p className="label text-acc">{eyebrow}</p>
+        <p className="label text-acc-ink">{eyebrow}</p>
         <h2 className="mt-3 font-display text-4xl font-medium uppercase leading-[0.95] tracking-tight md:text-6xl">
           {title}
         </h2>
       </div>
       {href && (
-        <Link href={href} className="label shrink-0 pb-1 text-muted transition-colors hover:text-acc">
+        <Link href={href} className="label shrink-0 pb-1 text-muted transition-colors hover:text-acc-ink">
           {cta} →
         </Link>
       )}

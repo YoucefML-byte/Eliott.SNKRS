@@ -16,7 +16,7 @@ export function Intro() {
     <section className="border-b border-line">
       <div className="mx-auto grid max-w-[1360px] gap-12 px-4 py-20 md:px-8 md:py-28 lg:grid-cols-[1.4fr_1fr] lg:items-end">
         <div>
-          <p className="label text-acc">Revendeur de sneakers · neuves et occasion</p>
+          <p className="label text-acc-ink">Revendeur de sneakers · neuves et occasion</p>
           <h1 className="mt-5 max-w-[14ch] font-display text-[44px] font-medium uppercase leading-[0.92] tracking-tight md:text-[84px]">
             Les paires qu&apos;on ne trouve plus en boutique.
           </h1>

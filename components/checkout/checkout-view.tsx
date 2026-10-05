@@ -89,12 +89,12 @@ export function CheckoutView() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="font-display text-4xl font-medium uppercase tracking-tight md:text-6xl">Commande</h1>
         <p className="flex items-center gap-2 text-sm text-muted">
-          <Lock className="size-4 text-acc" /> Paiement sécurisé
+          <Lock className="size-4 text-acc-ink" /> Paiement sécurisé
         </p>
       </div>
-      <p className="mt-4 rounded-md border border-warm/40 bg-warm/10 px-4 py-3 text-sm text-warm">
+      <p className="mt-4 rounded-md border border-warm/50 bg-warm/10 px-4 py-3 text-sm text-ink">
         Maquette : aucune commande n&apos;est réellement passée et aucun paiement n&apos;est débité.{" "}
-        <button type="button" onClick={fillDemo} className="underline underline-offset-4 hover:text-ink">
+        <button type="button" onClick={fillDemo} className="underline underline-offset-4 hover:text-acc-ink">
           Remplir avec un exemple
         </button>
       </p>
@@ -224,7 +224,7 @@ function Step({ n, title, children }: { n: number; title: string; children: Reac
   return (
     <section>
       <h2 className="mb-5 flex items-baseline gap-3 font-display text-2xl font-medium uppercase tracking-tight">
-        <span className="font-mono text-sm text-acc">0{n}</span>
+        <span className="font-mono text-sm text-acc-ink">0{n}</span>
         {title}
       </h2>
       {children}
