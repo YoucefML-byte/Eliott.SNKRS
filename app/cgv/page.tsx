@@ -60,7 +60,7 @@ export default function Page() {
         </p>
       </Section>
 
-      <Section title="5. Livraison">
+      <Section title="5. Livraison" id="livraison">
         <ul>
           {SHIPPING.map((s) => (
             <li key={s.id}>
@@ -74,7 +74,7 @@ export default function Page() {
         </p>
       </Section>
 
-      <Section title="6. Droit de rétractation (14 jours)">
+      <Section title="6. Droit de rétractation (14 jours)" id="retours">
         <p>
           Vous disposez de 14 jours à compter de la réception de votre commande pour vous rétracter, sans avoir à
           justifier de motif (articles L221-18 et suivants du Code de la consommation). Ce droit s&apos;applique à
@@ -107,7 +107,7 @@ export default function Page() {
         </p>
       </Section>
 
-      <Section title="8. Authenticité">
+      <Section title="8. Authenticité" id="authenticite">
         <p>
           Chaque paire est contrôlée avant l&apos;envoi. Si une paire s&apos;avérait non authentique, elle serait
           reprise et intégralement remboursée, frais de retour inclus.
