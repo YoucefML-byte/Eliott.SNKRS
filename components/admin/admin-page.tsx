@@ -12,6 +12,9 @@ import { DEMO_ADMIN } from "@/lib/catalog/demo";
 import { useCatalog } from "@/lib/catalog/provider";
 import { formatPrice } from "@/lib/format";
 import { inStock, productHref } from "@/lib/products";
+import { cn } from "@/lib/utils";
+
+import { OrdersPanel } from "./orders-panel";
 
 export function AdminPage() {
   const { admin } = useCatalog();
@@ -24,7 +27,7 @@ function DemoNotice() {
   return (
     <p className="rounded-md border border-warm/50 bg-warm/10 px-4 py-3 text-sm">
       <strong>Mode démo</strong> : la base de données n&apos;est pas encore branchée. Les paires ajoutées
-      ou supprimées ne changent que dans ce navigateur.
+      ou supprimées et les commandes simulées ne changent que dans ce navigateur.
     </p>
   );
 }
@@ -99,6 +102,7 @@ function Login() {
 
 function Dashboard() {
   const { admin, products, ready, error, setFormOpen, signOut } = useCatalog();
+  const [tab, setTab] = useState<"stock" | "orders">("stock");
 
   return (
     <div className="mx-auto grid max-w-[1100px] gap-8 px-4 pb-24 pt-10 md:px-8 md:pt-14">
@@ -106,11 +110,13 @@ function Dashboard() {
         <div>
           <p className="label text-acc-ink">Espace admin · {admin?.email}</p>
           <h1 className="mt-3 font-display text-5xl font-medium uppercase leading-none tracking-tight md:text-6xl">
-            Le stock
+            {tab === "stock" ? "Le stock" : "Commandes"}
           </h1>
-          <p className="mt-3 font-mono text-sm text-muted">
-            {products.length} paire{products.length > 1 ? "s" : ""} en ligne
-          </p>
+          {tab === "stock" && (
+            <p className="mt-3 font-mono text-sm text-muted">
+              {products.length} paire{products.length > 1 ? "s" : ""} en ligne
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
           <Button size="lg" onClick={() => setFormOpen(true)}>
@@ -122,10 +128,35 @@ function Dashboard() {
         </div>
       </div>
 
+      <div role="tablist" aria-label="Espace admin" className="flex gap-1 border-b border-line">
+        {(
+          [
+            ["stock", "Stock"],
+            ["orders", "Commandes"],
+          ] as const
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={tab === id}
+            onClick={() => setTab(id)}
+            className={cn(
+              "-mb-px border-b-2 px-4 py-3 text-sm transition-colors",
+              tab === id ? "border-acc text-ink" : "border-transparent text-muted hover:text-ink",
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       <DemoNotice />
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      {!ready ? (
+      {tab === "orders" ? (
+        <OrdersPanel />
+      ) : !ready ? (
         <div className="h-40 animate-pulse rounded-md bg-surface" />
       ) : products.length === 0 ? (
         <div className="rounded-md border border-dashed border-line px-6 py-16 text-center">

@@ -1,0 +1,53 @@
+name: Deploy Supabase functions
+
+# Déploie les fonctions de paiement (supabase/functions) sur le projet Supabase.
+# À configurer une fois dans Settings → Secrets and variables → Actions :
+#   secret   SUPABASE_ACCESS_TOKEN  (supabase.com → Account → Access Tokens)
+#   variable SUPABASE_PROJECT_REF   (l'identifiant dans l'URL du projet)
+# Tant qu'ils sont absents, le workflow ne fait rien.
+
+on:
+  push:
+    branches: [main]
+    paths: ["supabase/functions/**", "supabase/config.toml"]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: pw
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - working-directory: supabase/functions
+        run: |
+          deno lint
+          deno test -A
+        env:
+          TEST_DATABASE_URL: postgres://postgres:pw@localhost:5432/postgres
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+    steps:
+      - uses: actions/checkout@v5
+      - if: env.SUPABASE_ACCESS_TOKEN != '' && env.SUPABASE_PROJECT_REF != ''
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - if: env.SUPABASE_ACCESS_TOKEN != '' && env.SUPABASE_PROJECT_REF != ''
+        run: supabase functions deploy --project-ref "$SUPABASE_PROJECT_REF"
+      - if: env.SUPABASE_ACCESS_TOKEN == '' || env.SUPABASE_PROJECT_REF == ''
+        run: echo "SUPABASE_ACCESS_TOKEN / SUPABASE_PROJECT_REF non configurés — déploiement ignoré."

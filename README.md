@@ -1,8 +1,8 @@
 # Eliott SNKRS — maquette du futur site
 
-Maquette frontend du futur site e-commerce d'Eliott SNKRS, destinée à être
-présentée au client. Tout est simulé : pas de base de données, pas de paiement,
-pas de comptes. Le panier est gardé dans le navigateur.
+Site e-commerce d'Eliott SNKRS. Sans configuration, il tourne en **mode démo**
+(stock, admin et paiement simulés dans le navigateur) ; une fois Supabase,
+Stripe et PayPal branchés (voir plus bas), il vend pour de vrai.
 
 ## Lancer le projet
 
@@ -19,9 +19,10 @@ Puis ouvrir http://localhost:3000.
 | --- | --- |
 | `/` | Accueil : animation d'ouverture, nouveautés, collabs, marques, guide Neuf / Occasion |
 | `/catalogue` | Stock avec recherche, filtres (marque, pointure, état, prix) et tri |
-| `/produit/[slug]` | Fiche produit : galerie photo, pointures avec l'état de chaque paire |
+| `/produit/?p=<slug>` | Fiche produit : galerie photo, pointures avec l'état de chaque paire |
 | `/panier` | Panier (aussi disponible en tiroir depuis l'en-tête) |
-| `/checkout` | Commande fictive, puis `/checkout/confirmation` |
+| `/checkout` | Commande et paiement (Stripe ou PayPal), puis `/checkout/confirmation` |
+| `/admin` | Espace admin : stock et commandes |
 
 ## Modifier le contenu
 
@@ -75,6 +76,83 @@ compte présent dans la table `admins` peut ajouter ou supprimer des paires et d
 
 En local : copier `.env.example` en `.env.local` et y mettre les mêmes valeurs.
 
+## Paiement (Stripe + PayPal)
+
+Le client choisit **carte bancaire** (CB, Visa, Mastercard, Apple Pay, Google Pay
+— page sécurisée Stripe) ou **PayPal**. Aucune donnée bancaire ne passe par le site.
+
+Comment ça marche :
+
+1. Au clic sur « Payer », la fonction `checkout` (Supabase) crée la commande avec
+   les **prix lus dans la base** (jamais ceux envoyés par le navigateur) et
+   **réserve les paires 30 minutes** : deux clients ne peuvent pas payer la même paire.
+2. Le client est envoyé sur Stripe ou PayPal pour payer.
+3. Au retour, la fonction `confirm-order` vérifie le paiement (et l'encaisse pour
+   PayPal) ; Stripe confirme aussi de son côté via `stripe-webhook`. La commande
+   passe en « payée », la paire disparaît du stock et le panier se vide.
+4. Paiement abandonné ou annulé : la réservation est levée et les paires reviennent en vente.
+
+Eliott retrouve les commandes payées (adresse, téléphone, pointure) dans
+**/admin → Commandes** et les marque « expédiées ». Les remboursements se font
+depuis le tableau de bord Stripe ou PayPal.
+
+### Mise en route (à faire une fois, d'abord en mode test)
+
+1. **Base** : SQL Editor de Supabase → coller `supabase/payments.sql` → **Run**
+   (après `schema.sql`).
+2. **Stripe** (https://dashboard.stripe.com, compte au nom d'Eliott : SIRET, IBAN) :
+   - *Développeurs → Clés API* : copier la **clé secrète** (`sk_test_…` en mode test).
+   - *Paramètres → Moyens de paiement* : activer Carte, Apple Pay, Google Pay.
+   - *Développeurs → Webhooks → Ajouter un endpoint* :
+     `https://<projet>.supabase.co/functions/v1/stripe-webhook`, événements
+     `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
+     `checkout.session.async_payment_failed`, `checkout.session.expired`.
+     Copier le **secret de signature** (`whsec_…`).
+   - *Paramètres → E-mails clients* : activer les reçus de paiement.
+3. **PayPal** (compte Business) : https://developer.paypal.com → *Apps & Credentials*
+   → *Create App* (onglet **Sandbox** pour tester) → copier **Client ID** et **Secret**.
+4. **Secrets des fonctions** : Supabase → *Edge Functions → Secrets* :
+
+   | Nom | Valeur |
+   | --- | --- |
+   | `SITE_URL` | adresse du site, ex. `https://youcefml-byte.github.io/Eliott.SNKRS` |
+   | `STRIPE_SECRET_KEY` | `sk_test_…` puis `sk_live_…` |
+   | `STRIPE_WEBHOOK_SECRET` | `whsec_…` |
+   | `PAYPAL_CLIENT_ID` / `PAYPAL_SECRET` | identifiants de l'app PayPal |
+   | `PAYPAL_ENV` | `sandbox` pour tester, `live` en production |
+   | `ALLOWED_ORIGINS` | (optionnel) autres adresses autorisées, ex. `http://localhost:3000` |
+
+5. **Déployer les fonctions** : sur GitHub, *Settings → Secrets and variables → Actions* :
+   secret `SUPABASE_ACCESS_TOKEN` (supabase.com → Account → Access Tokens) et variable
+   `SUPABASE_PROJECT_REF` (l'identifiant dans l'URL du projet), puis onglet *Actions →
+   Deploy Supabase functions → Run workflow*. (Ou en local :
+   `npx supabase functions deploy --project-ref <ref>`.)
+6. **Activer le paiement sur le site** : variable GitHub `NEXT_PUBLIC_PAYMENTS_ENABLED` = `1`,
+   puis relancer *Deploy to GitHub Pages*.
+7. **Tester** : carte Stripe `4242 4242 4242 4242` (date future, CVC quelconque) et un
+   compte acheteur PayPal *Sandbox*. Vérifier la commande dans /admin → Commandes.
+8. **Passer en réel** : remplacer les clés par celles du mode live (Stripe `sk_live_…`
+   + nouveau webhook live, app PayPal *Live* + `PAYPAL_ENV=live`).
+
+L'argent arrive sur le compte Stripe (virement automatique vers l'IBAN) et sur le
+solde PayPal (virement vers la banque). Frais indicatifs : Stripe ≈ 1,5 % + 0,25 €
+par carte européenne, PayPal ≈ 2,9 % + 0,35 € — voir leurs grilles à jour.
+
+> **Hébergement** : GitHub Pages n'est pas prévu pour une boutique commerciale.
+> Avant d'ouvrir les ventes, publier le même dossier `out/` sur Netlify ou
+> Cloudflare Pages (gratuits, avec nom de domaine), et mettre `SITE_URL` à jour.
+
+### Tests des paiements
+
+```bash
+cd supabase/functions
+deno test -A                 # tests unitaires (signature Stripe, montants PayPal…)
+TEST_DATABASE_URL=postgres://postgres:pw@localhost:5432/test deno test -A
+                             # + parcours complets sur un PostgreSQL local vide
+```
+
+Ils tournent aussi automatiquement sur GitHub avant chaque déploiement des fonctions.
+
 ## RGPD et informations légales
 
 Pages incluses, accessibles depuis le bas de chaque page :
@@ -92,7 +170,8 @@ Avant la mise en ligne réelle, à faire par Eliott :
 5. Si un outil de statistiques ou de publicité est ajouté un jour : il faudra un
    bandeau de consentement (« Refuser » aussi visible qu'« Accepter ») et mettre à
    jour la politique de confidentialité. Aujourd'hui le site n'en a pas besoin :
-   il n'utilise que du stockage strictement nécessaire (panier, session admin).
+   il n'utilise que du stockage strictement nécessaire (panier, session admin,
+   commande en cours de paiement).
 
 Ces textes sont des modèles sérieux mais ne remplacent pas la relecture d'un
 professionnel du droit avant l'ouverture de la boutique.

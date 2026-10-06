@@ -1,0 +1,14 @@
+# Configuration des fonctions Supabase (déployées par
+# .github/workflows/supabase-functions.yml ou `supabase functions deploy`).
+project_id = "eliott-snkrs"
+
+# Appelées par le site (visiteurs non connectés) et par Stripe : pas de
+# connexion Supabase exigée, chaque fonction vérifie elle-même ce qu'elle reçoit.
+[functions.checkout]
+verify_jwt = false
+
+[functions.confirm-order]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false

@@ -9,9 +9,9 @@ https://www.cnil.fr/fr/RGDP-le-registre-des-activites-de-traitement
 
 | Traitement | Finalité | Personnes concernées | Données | Destinataires | Hors UE | Durée | Sécurité |
 |---|---|---|---|---|---|---|---|
-| Gestion des commandes | Vendre, livrer, service après-vente | Clients | Identité, e-mail, téléphone, adresse, commande | Transporteur, prestataire de paiement | Non (sauf hébergeur) | Relation commerciale + 3 ans | Accès admin protégé, HTTPS |
+| Gestion des commandes | Vendre, livrer, service après-vente | Clients | Identité, e-mail, téléphone, adresse, commande (table `orders` Supabase) | Transporteur, Stripe ou PayPal | Non (sauf hébergeur) | Relation commerciale + 3 ans | Accès admin protégé, HTTPS |
 | Facturation | Obligations comptables | Clients | Identité, adresse, achats, montants | Comptable | Non | 10 ans | Sauvegardes, accès restreint |
-| Paiement | Encaisser, lutter contre la fraude | Clients | Données de paiement (chez le prestataire) | Prestataire de paiement (ex. Stripe) | Selon prestataire (clauses types) | Selon prestataire | PCI-DSS (prestataire) |
+| Paiement | Encaisser, lutter contre la fraude | Clients | Données de paiement (chez Stripe / PayPal), référence de transaction | Stripe Payments Europe (IE), PayPal Europe (LU) | Possible (clauses types des prestataires) | Selon prestataire | PCI-DSS (prestataire) |
 | Contacts clients | Répondre aux questions | Prospects, clients | Identité, messages | Meta (si Instagram) | Oui (Meta) | 3 ans après le dernier échange | — |
 | Gestion du stock / admin | Mettre en ligne les paires | Administrateur | E-mail, mot de passe (haché) | Supabase | Non (région UE) | Durée du compte | Mot de passe fort, inscriptions désactivées, règles RLS |
 | Hébergement du site | Afficher le site | Visiteurs | Adresse IP, journaux techniques | GitHub (Pages) | Oui (États-Unis, DPF + clauses types) | Selon GitHub | HTTPS |
@@ -20,7 +20,8 @@ https://www.cnil.fr/fr/RGDP-le-registre-des-activites-de-traitement
 
 - [ ] GitHub — conditions et DPA : https://github.com/customer-terms
 - [ ] Supabase — projet créé en **région Europe**, DPA à accepter dans le tableau de bord
-- [ ] Prestataire de paiement (Stripe ou autre) — DPA inclus dans les conditions
+- [ ] Stripe — DPA inclus dans les conditions : https://stripe.com/fr/legal/dpa
+- [ ] PayPal — conditions et politique de confidentialité : https://www.paypal.com/fr/legalhub/home
 - [ ] Transporteurs utilisés
 
 ## En cas de violation de données

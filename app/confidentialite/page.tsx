@@ -46,9 +46,9 @@ export default function Page() {
             ],
             [
               "Paiement",
-              "Données de paiement, traitées directement par le prestataire de paiement (le numéro de carte ne nous est jamais transmis)",
+              "Données de paiement, saisies et traitées directement chez Stripe ou PayPal (le numéro de carte ne nous est jamais transmis) ; nous conservons seulement la référence de la transaction",
               "Exécution du contrat ; lutte contre la fraude (intérêt légitime)",
-              "Selon les obligations du prestataire de paiement",
+              "Référence de transaction : 10 ans avec la facture ; données bancaires : selon Stripe ou PayPal",
             ],
             [
               "Répondre à vos questions (e-mail, Instagram)",
@@ -84,8 +84,14 @@ export default function Page() {
             <strong>Base de données</strong> : Supabase (serveurs situés dans l&apos;Union européenne).
           </li>
           <li>
-            <strong>Paiement</strong> : le prestataire de paiement sécurisé choisi pour la boutique (par exemple
-            Stripe), certifié PCI-DSS.
+            <strong>Paiement par carte, Apple Pay ou Google Pay</strong> : Stripe Payments Europe Ltd (Irlande),
+            certifié PCI-DSS, qui reçoit votre e-mail et le montant de la commande.
+          </li>
+          <li>
+            <strong>Paiement PayPal</strong> : PayPal (Europe) S.à r.l. et Cie, S.C.A. (Luxembourg), qui reçoit
+            votre nom, votre e-mail, votre adresse de livraison et le détail de la commande. PayPal traite aussi
+            ces données pour son propre compte (lutte contre la fraude, obligations bancaires) selon sa propre
+            politique de confidentialité.
           </li>
           <li>
             <strong>Livraison</strong> : le transporteur choisi à la commande (Colissimo, Mondial Relay ou
@@ -118,6 +124,11 @@ export default function Page() {
             <strong>Le récapitulatif de votre dernière commande</strong>, effacé à la fermeture de l&apos;onglet.
           </li>
           <li>
+            <strong>La commande en cours de paiement</strong> (son identifiant et les coordonnées saisies, effacées à
+            la fermeture de l&apos;onglet), pour libérer les paires réservées et vous éviter de tout ressaisir si vous
+            revenez depuis Stripe ou PayPal.
+          </li>
+          <li>
             <strong>La session de l&apos;administrateur</strong>, uniquement pour la personne qui gère le stock.
           </li>
         </ul>
@@ -133,8 +144,8 @@ export default function Page() {
         <p>
           Le site est servi exclusivement en HTTPS. La gestion du stock est réservée à un compte administrateur
           protégé par mot de passe, et les règles de la base de données interdisent toute modification par un autre
-          compte. Les paiements sont confiés à un prestataire spécialisé : aucune donnée bancaire n&apos;est stockée
-          par {LEGAL.brand}.
+          compte. Les paiements sont confiés à Stripe et PayPal : la saisie de la carte se fait sur leurs pages
+          sécurisées et aucune donnée bancaire n&apos;est stockée par {LEGAL.brand}.
         </p>
       </Section>
 

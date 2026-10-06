@@ -33,6 +33,8 @@ jobs:
           # Settings → Secrets and variables → Actions → Variables (empty = demo mode)
           NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          # "1" = vrais paiements Stripe / PayPal (fonctions Supabase déployées)
+          NEXT_PUBLIC_PAYMENTS_ENABLED: ${{ vars.NEXT_PUBLIC_PAYMENTS_ENABLED }}
       - uses: actions/upload-pages-artifact@v4
         with:
           path: out

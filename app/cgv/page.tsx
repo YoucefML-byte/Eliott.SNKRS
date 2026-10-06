@@ -48,9 +48,15 @@ export default function Page() {
 
       <Section title="4. Commande et paiement">
         <p>
-          La commande est ferme après validation du paiement. Un e-mail de confirmation récapitule la commande. Le
-          paiement s&apos;effectue en ligne par l&apos;intermédiaire d&apos;un prestataire de paiement sécurisé ;{" "}
-          {LEGAL.brand} n&apos;a jamais accès aux numéros de carte.
+          Le paiement s&apos;effectue en ligne, au comptant, par carte bancaire (CB, Visa, Mastercard), Apple Pay
+          ou Google Pay via Stripe, ou par PayPal. La saisie des données bancaires a lieu sur les pages sécurisées
+          de ces prestataires ; {LEGAL.brand} n&apos;a jamais accès aux numéros de carte.
+        </p>
+        <p>
+          Chaque paire étant une pièce unique, les paires d&apos;une commande sont réservées pendant 30 minutes le
+          temps du paiement. Passé ce délai sans paiement, la réservation est annulée et les paires sont remises en
+          vente. La commande est ferme dès la confirmation du paiement, affichée à l&apos;écran ; les reçus de
+          paiement sont envoyés par e-mail par Stripe ou PayPal.
         </p>
       </Section>
 

@@ -13,9 +13,11 @@ import {
 import type { Product, SizeOption } from "@/data/types";
 
 import { useCatalog } from "./catalog/provider";
+import { recordDemoOrder } from "./orders";
 import { findProduct } from "./products";
 
-// Panier simulé : tout reste dans le navigateur (localStorage), aucun backend.
+// Panier gardé dans le navigateur (localStorage). En mode démo, la commande est
+// aussi simulée ici ; en paiement réel, elle est créée par lib/payment.ts.
 
 export interface CartLine {
   slug: string;
@@ -38,6 +40,8 @@ export interface Order {
   email: string;
   name: string;
   address: string;
+  phone?: string;
+  payment?: string;
 }
 
 type State = { lines: CartLine[]; open: boolean; ready: boolean; lastOrder: Order | null };
@@ -48,6 +52,7 @@ type Action =
   | { type: "qty"; slug: string; size: string; qty: number; max: number }
   | { type: "remove"; slug: string; size: string }
   | { type: "open"; open: boolean }
+  | { type: "clear" }
   | { type: "order"; order: Order };
 
 const KEY = "eliott-cart-v1";
@@ -80,6 +85,8 @@ function reducer(state: State, a: Action): State {
       return { ...state, lines: state.lines.filter((l) => !same(l, a.slug, a.size)) };
     case "open":
       return { ...state, open: a.open };
+    case "clear":
+      return { ...state, lines: [], open: false };
     case "order":
       return { ...state, lines: [], open: false, lastOrder: a.order };
   }
@@ -122,6 +129,8 @@ interface CartApi {
   setQty: (slug: string, size: string, qty: number) => void;
   remove: (slug: string, size: string) => void;
   setOpen: (open: boolean) => void;
+  /** vide le panier (paiement réel confirmé) */
+  clear: () => void;
   placeOrder: (order: Omit<Order, "lines" | "subtotal" | "number" | "total">) => Order;
 }
 
@@ -164,11 +173,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
         total: subtotal + details.shipping.price,
       };
       write(() => sessionStorage, ORDER_KEY, order);
+      recordDemoOrder(order);
       dispatch({ type: "order", order });
       return order;
     },
     [lines, subtotal],
   );
+
+  const clear = useCallback(() => dispatch({ type: "clear" }), []);
 
   const api: CartApi = {
     lines,
@@ -181,6 +193,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setQty: (slug, size, qty) => dispatch({ type: "qty", slug, size, qty, max: stockOf(slug, size) }),
     remove: (slug, size) => dispatch({ type: "remove", slug, size }),
     setOpen: (open) => dispatch({ type: "open", open }),
+    clear,
     placeOrder,
   };
 

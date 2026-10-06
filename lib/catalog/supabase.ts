@@ -30,7 +30,8 @@ interface Row {
 }
 
 let client: Promise<SupabaseClient> | null = null;
-const supabase = () =>
+/** client Supabase partagé (session admin comprise), chargé à la demande */
+export const supabase = () =>
   (client ??= import("@supabase/supabase-js").then(({ createClient }) =>
     createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!),
   ));
