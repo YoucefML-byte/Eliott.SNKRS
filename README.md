@@ -36,3 +36,41 @@ Puis ouvrir http://localhost:3000.
 
 Next.js (App Router), React, TypeScript, Tailwind CSS v4, structure shadcn/ui
 (`components/ui`), animations avec `motion`.
+
+## Espace admin (ajouter / retirer des paires)
+
+- Page de connexion : `/admin` (non référencée, à garder en favori).
+- Une fois connecté, un bouton **« Ajouter une paire »** apparaît dans l'en-tête :
+  photos (glisser-déposer, la première est la principale), nom, marque, coloris,
+  prix, état (neuf ou occasion avec note /10), pointures et description.
+- Sur chaque fiche produit, l'admin voit un bouton **« Supprimer la paire »**.
+
+### Mode démo (par défaut)
+
+Tant que la base n'est pas branchée, le site fonctionne en mode démo : l'admin
+se connecte avec `admin@eliott-snkrs.fr` / `eliott-demo`, et les paires ajoutées
+ou supprimées ne changent que dans son navigateur. Utile pour montrer le parcours.
+
+### Brancher la vraie base de données (Supabase, offre gratuite)
+
+1. Créer un compte et un projet sur https://supabase.com (région Europe).
+2. **SQL Editor** → coller le contenu de `supabase/schema.sql` → **Run**.
+3. (Optionnel) importer les paires de la maquette : coller `supabase/seed.sql` → **Run**.
+4. **Authentication → Users → Add user** : créer le compte d'Eliott (e-mail + mot de passe).
+5. Le déclarer admin dans le SQL Editor :
+   ```sql
+   insert into public.admins (user_id)
+   select id from auth.users where email = 'eliott@exemple.fr';
+   ```
+6. **Authentication → Sign In / Providers** : désactiver « Allow new users to sign up »
+   (personne d'autre ne pourra créer de compte).
+7. **Project Settings → API** : copier la *Project URL* et la clé *anon public*.
+8. Sur GitHub : **Settings → Secrets and variables → Actions → Variables** →
+   ajouter `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+   puis relancer le déploiement (onglet Actions → Deploy to GitHub Pages → Run workflow).
+
+La clé *anon* est publique par nature : la sécurité est assurée par les règles
+de la base (`supabase/schema.sql`) — tout le monde peut lire le stock, seul un
+compte présent dans la table `admins` peut ajouter ou supprimer des paires et des photos.
+
+En local : copier `.env.example` en `.env.local` et y mettre les mêmes valeurs.

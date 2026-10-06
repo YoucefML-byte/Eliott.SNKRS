@@ -8,6 +8,7 @@ import { ProductGrid } from "@/components/product/product-grid";
 import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
 import { brandName } from "@/data/brands";
+import { useCatalog } from "@/lib/catalog/provider";
 import {
   activeFilterCount,
   EMPTY_FILTERS,
@@ -27,7 +28,8 @@ export function CatalogueView() {
   const pathname = usePathname();
   const params = useSearchParams();
   const filters = readFilters(new URLSearchParams(params.toString()));
-  const results = filterProducts(filters);
+  const { products } = useCatalog();
+  const results = filterProducts(filters, products);
   const [sheet, setSheet] = useState(false);
 
   const update = (f: Filters) => router.replace(pathname + writeFilters(f), { scroll: false });

@@ -1,15 +1,17 @@
+"use client";
+
 import Link from "next/link";
 
 import { buttonVariants } from "@/components/ui/button";
-import { BRANDS } from "@/data/brands";
-import { PRODUCTS } from "@/data/products";
-import { totalStock } from "@/lib/products";
+import { useCatalog } from "@/lib/catalog/provider";
+import { brandsOf, totalStock } from "@/lib/products";
 
 export function Intro() {
+  const { products } = useCatalog();
   const stats = [
-    { value: PRODUCTS.length, label: "Modèles" },
-    { value: PRODUCTS.reduce((n, p) => n + totalStock(p), 0), label: "Paires en stock" },
-    { value: BRANDS.length, label: "Marques" },
+    { value: products.length, label: "Modèles" },
+    { value: products.reduce((n, p) => n + totalStock(p), 0), label: "Paires en stock" },
+    { value: brandsOf(products).length, label: "Marques" },
   ];
 
   return (

@@ -12,7 +12,8 @@ import {
 
 import type { Product, SizeOption } from "@/data/types";
 
-import { getProduct } from "./products";
+import { useCatalog } from "./catalog/provider";
+import { findProduct } from "./products";
 
 // Panier simulé : tout reste dans le navigateur (localStorage), aucun backend.
 
@@ -43,8 +44,8 @@ type State = { lines: CartLine[]; open: boolean; ready: boolean; lastOrder: Orde
 
 type Action =
   | { type: "hydrate"; lines: CartLine[]; lastOrder: Order | null }
-  | { type: "add"; slug: string; size: string }
-  | { type: "qty"; slug: string; size: string; qty: number }
+  | { type: "add"; slug: string; size: string; max: number }
+  | { type: "qty"; slug: string; size: string; qty: number; max: number }
   | { type: "remove"; slug: string; size: string }
   | { type: "open"; open: boolean }
   | { type: "order"; order: Order };
@@ -54,15 +55,12 @@ const ORDER_KEY = "eliott-order-v1";
 
 const same = (l: CartLine, slug: string, size: string) => l.slug === slug && l.size === size;
 
-const stockOf = (slug: string, size: string) =>
-  getProduct(slug)?.sizes.find((s) => s.size === size)?.stock ?? 0;
-
 function reducer(state: State, a: Action): State {
   switch (a.type) {
     case "hydrate":
       return { ...state, lines: a.lines, lastOrder: a.lastOrder, ready: true };
     case "add": {
-      const max = stockOf(a.slug, a.size);
+      const { max } = a;
       const existing = state.lines.find((l) => same(l, a.slug, a.size));
       const lines = existing
         ? state.lines.map((l) =>
@@ -72,7 +70,7 @@ function reducer(state: State, a: Action): State {
       return { ...state, lines, open: true };
     }
     case "qty": {
-      const qty = Math.max(1, Math.min(a.qty, stockOf(a.slug, a.size)));
+      const qty = Math.max(1, Math.min(a.qty, a.max));
       return {
         ...state,
         lines: state.lines.map((l) => (same(l, a.slug, a.size) ? { ...l, qty } : l)),
@@ -87,9 +85,9 @@ function reducer(state: State, a: Action): State {
   }
 }
 
-function resolve(lines: CartLine[]): ResolvedLine[] {
+function resolve(lines: CartLine[], products: Product[]): ResolvedLine[] {
   return lines.flatMap((l) => {
-    const product = getProduct(l.slug);
+    const product = findProduct(products, l.slug);
     const option = product?.sizes.find((s) => s.size === l.size);
     if (!product || !option) return [];
     return [{ ...l, product, option, total: product.price * l.qty }];
@@ -149,7 +147,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (state.ready) write(() => localStorage, KEY, state.lines);
   }, [state.lines, state.ready]);
 
-  const lines = useMemo(() => resolve(state.lines), [state.lines]);
+  const { products } = useCatalog();
+  const stockOf = (slug: string, size: string) =>
+    findProduct(products, slug)?.sizes.find((s) => s.size === size)?.stock ?? 0;
+  const lines = useMemo(() => resolve(state.lines, products), [state.lines, products]);
   const subtotal = lines.reduce((n, l) => n + l.total, 0);
   const count = lines.reduce((n, l) => n + l.qty, 0);
 
@@ -176,8 +177,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     open: state.open,
     ready: state.ready,
     lastOrder: state.lastOrder,
-    add: (slug, size) => dispatch({ type: "add", slug, size }),
-    setQty: (slug, size, qty) => dispatch({ type: "qty", slug, size, qty }),
+    add: (slug, size) => dispatch({ type: "add", slug, size, max: stockOf(slug, size) }),
+    setQty: (slug, size, qty) => dispatch({ type: "qty", slug, size, qty, max: stockOf(slug, size) }),
     remove: (slug, size) => dispatch({ type: "remove", slug, size }),
     setOpen: (open) => dispatch({ type: "open", open }),
     placeOrder,

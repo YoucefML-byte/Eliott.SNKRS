@@ -4,8 +4,8 @@ import Link from "next/link";
 
 import { ProductGrid } from "@/components/product/product-grid";
 import { buttonVariants } from "@/components/ui/button";
-import { PRODUCTS } from "@/data/products";
 import { useCart } from "@/lib/cart";
+import { useCatalog } from "@/lib/catalog/provider";
 import { formatPrice } from "@/lib/format";
 import { availability } from "@/lib/products";
 
@@ -14,9 +14,10 @@ import { ShippingProgress } from "./shipping-progress";
 
 export function CartPageView() {
   const cart = useCart();
-  const suggestions = PRODUCTS.filter(
-    (p) => p.featured && availability(p) !== "soldout" && !cart.lines.some((l) => l.slug === p.slug),
-  ).slice(0, 4);
+  const { products } = useCatalog();
+  const suggestions = products
+    .filter((p) => availability(p) !== "soldout" && !cart.lines.some((l) => l.slug === p.slug))
+    .slice(0, 4);
 
   return (
     <div className="mx-auto max-w-[1360px] px-4 pb-24 pt-8 md:px-8 md:pt-14">

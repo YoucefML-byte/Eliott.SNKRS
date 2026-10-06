@@ -1,11 +1,14 @@
+"use client";
+
 import { ProductCard } from "@/components/product/product-card";
-import { PRODUCTS } from "@/data/products";
+import { useCatalog } from "@/lib/catalog/provider";
 import { availability } from "@/lib/products";
 
 import { SectionHeading } from "./section-heading";
 
 export function LatestDrops() {
-  const latest = PRODUCTS.filter((p) => availability(p) !== "soldout")
+  const { products } = useCatalog();
+  const latest = products.filter((p) => availability(p) !== "soldout")
     .sort((a, b) => b.arrivedAt.localeCompare(a.arrivedAt))
     .slice(0, 8);
 

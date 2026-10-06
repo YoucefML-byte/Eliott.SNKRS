@@ -9,7 +9,8 @@ import { ProductImage } from "@/components/product/product-image";
 import { Sheet } from "@/components/ui/sheet";
 import { brandName } from "@/data/brands";
 import { formatPrice } from "@/lib/format";
-import { searchProducts } from "@/lib/products";
+import { useCatalog } from "@/lib/catalog/provider";
+import { productHref, searchProducts } from "@/lib/products";
 
 const SUGGESTIONS = ["Travis Scott", "Off-White", "Corteiz", "NOCTA", "Kayano", "Prada"];
 
@@ -17,7 +18,8 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
   const router = useRouter();
   const [q, setQ] = useState("");
   const input = useRef<HTMLInputElement>(null);
-  const results = searchProducts(q);
+  const { products } = useCatalog();
+  const results = searchProducts(products, q);
 
   useEffect(() => {
     if (open) window.setTimeout(() => input.current?.focus(), 80);
@@ -80,7 +82,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
             <ul className="mt-6 grid gap-x-6 gap-y-2 md:grid-cols-2">
               {results.map((p) => (
                 <li key={p.slug}>
-                  <Link href={`/produit/${p.slug}`} onClick={close} className="group flex items-center gap-4 rounded-md p-2 hover:bg-raised">
+                  <Link href={productHref(p.slug)} onClick={close} className="group flex items-center gap-4 rounded-md p-2 hover:bg-raised">
                     <ProductImage product={p} className="size-16 shrink-0 rounded-sm" artClassName="w-[95%]" />
                     <div className="min-w-0 flex-1">
                       <p className="label text-muted">{brandName(p.brand)}</p>

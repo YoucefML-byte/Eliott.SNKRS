@@ -1,10 +1,12 @@
 import { brandName } from "@/data/brands";
-import { PRODUCTS } from "@/data/products";
 import type { Condition, Product, SizeOption } from "@/data/types";
 
 import { sizeValue } from "./format";
 
-export const getProduct = (slug: string) => PRODUCTS.find((p) => p.slug === slug);
+export const findProduct = (products: Product[], slug: string) =>
+  products.find((p) => p.slug === slug);
+
+export const productHref = (slug: string) => `/produit/?p=${encodeURIComponent(slug)}`;
 
 export const inStock = (p: Product) => p.sizes.filter((s) => s.stock > 0);
 
@@ -38,7 +40,7 @@ export const sizeLabel = (s: SizeOption) =>
 
 export const fullName = (p: Product) => `${brandName(p.brand)} ${p.name}`;
 
-export const isNew = (p: Product, now = new Date("2026-09-14")) =>
+export const isNew = (p: Product, now = new Date()) =>
   now.getTime() - new Date(p.arrivedAt).getTime() < 8 * 24 * 3600 * 1000;
 
 // ---------------------------------------------------------------------------
@@ -120,12 +122,12 @@ const matchesQuery = (p: Product, q: string) => {
     .every((w) => hay.includes(w));
 };
 
-export function searchProducts(q: string, limit = 6) {
+export function searchProducts(products: Product[], q: string, limit = 6) {
   if (!q.trim()) return [];
-  return PRODUCTS.filter((p) => matchesQuery(p, q)).slice(0, limit);
+  return products.filter((p) => matchesQuery(p, q)).slice(0, limit);
 }
 
-export function filterProducts(f: Filters, products = PRODUCTS) {
+export function filterProducts(f: Filters, products: Product[]) {
   const range = PRICE_RANGES.find((r) => r.id === f.price);
   const out = products.filter((p) => {
     if (f.q && !matchesQuery(p, f.q)) return false;
@@ -149,12 +151,22 @@ export function filterProducts(f: Filters, products = PRODUCTS) {
 }
 
 /** every size present in the catalogue, sorted */
-export const ALL_SIZES = [...new Set(PRODUCTS.flatMap((p) => p.sizes.map((s) => s.size)))].sort(
-  (a, b) => sizeValue(a) - sizeValue(b),
-);
+export const allSizes = (products: Product[]) =>
+  [...new Set(products.flatMap((p) => p.sizes.map((s) => s.size)))].sort(
+    (a, b) => sizeValue(a) - sizeValue(b),
+  );
 
-export function related(p: Product, n = 4) {
-  const others = PRODUCTS.filter((o) => o.slug !== p.slug && availability(o) !== "soldout");
+/** brands that have at least one pair, with their count */
+export function brandsOf(products: Product[]) {
+  const counts = new Map<string, number>();
+  for (const p of products) counts.set(p.brand, (counts.get(p.brand) ?? 0) + 1);
+  return [...counts]
+    .map(([id, count]) => ({ id, name: brandName(id), count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+}
+
+export function related(products: Product[], p: Product, n = 4) {
+  const others = products.filter((o) => o.slug !== p.slug && availability(o) !== "soldout");
   const score = (o: Product) =>
     (o.collab && o.collab === p.collab ? 3 : 0) + (o.brand === p.brand ? 2 : 0) + (o.silhouette === p.silhouette ? 1 : 0);
   return others.sort((a, b) => score(b) - score(a)).slice(0, n);

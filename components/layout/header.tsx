@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, Search, ShoppingBag } from "lucide-react";
+import { Menu, Plus, Search, ShieldCheck, ShoppingBag } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -10,6 +10,7 @@ import { Logo, LogoMark } from "@/components/brand/logo";
 import { BRANDS } from "@/data/brands";
 import { NAV } from "@/data/site";
 import { useCart } from "@/lib/cart";
+import { useCatalog } from "@/lib/catalog/provider";
 import { cn } from "@/lib/utils";
 
 import { MobileMenu } from "./mobile-menu";
@@ -17,6 +18,7 @@ import { SearchOverlay } from "./search-overlay";
 
 export function Header() {
   const cart = useCart();
+  const { admin, setFormOpen } = useCatalog();
   const pathname = usePathname();
   const [menu, setMenu] = useState(false);
   const [search, setSearch] = useState(false);
@@ -92,6 +94,32 @@ export function Header() {
 
           {/* right: search + cart */}
           <div className="flex items-center justify-end gap-1">
+            {admin && (
+              <>
+                <button
+                  onClick={() => setFormOpen(true)}
+                  aria-label="Ajouter une paire"
+                  className="hidden h-9 items-center gap-1.5 rounded-md bg-acc px-3 font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-on-acc hover:bg-[#5dff8f] sm:inline-flex"
+                >
+                  <Plus className="size-4" /> Ajouter une paire
+                </button>
+                <button
+                  onClick={() => setFormOpen(true)}
+                  aria-label="Ajouter une paire"
+                  className="grid size-11 place-items-center rounded-md text-acc-ink hover:bg-raised sm:hidden"
+                >
+                  <Plus className="size-5" />
+                </button>
+                <Link
+                  href="/admin"
+                  aria-label="Espace admin"
+                  title="Espace admin"
+                  className="hidden size-11 place-items-center rounded-md hover:bg-raised sm:grid"
+                >
+                  <ShieldCheck className="size-5" />
+                </Link>
+              </>
+            )}
             <button
               onClick={() => setSearch(true)}
               aria-label="Rechercher"

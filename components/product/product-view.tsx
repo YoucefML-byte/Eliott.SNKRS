@@ -1,7 +1,8 @@
 "use client";
 
-import { Check, ChevronDown, MessageCircle, PackageCheck, ShieldCheck, Truck } from "lucide-react";
+import { Check, ChevronDown, MessageCircle, PackageCheck, ShieldCheck, Trash2, Truck } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { SITE } from "@/data/site";
 import type { Product } from "@/data/types";
 import { useCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
+import { useCatalog } from "@/lib/catalog/provider";
 import { availability, inStock, related, sizeLabel } from "@/lib/products";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +22,7 @@ import { SizeSelector } from "./size-selector";
 
 export function ProductView({ product }: { product: Product }) {
   const cart = useCart();
+  const catalog = useCatalog();
   const available = inStock(product);
   // a single pair left is pre-selected
   const [size, setSize] = useState<string | null>(available.length === 1 ? available[0].size : null);
@@ -38,6 +41,8 @@ export function ProductView({ product }: { product: Product }) {
 
   return (
     <div className="mx-auto max-w-[1360px] px-4 md:px-8">
+      {catalog.admin && <AdminBar product={product} />}
+
       <nav aria-label="Fil d'Ariane" className="label hidden py-6 text-dim md:block">
         <Link href="/" className="hover:text-ink">Accueil</Link>
         <span className="mx-2">/</span>
@@ -65,7 +70,7 @@ export function ProductView({ product }: { product: Product }) {
             <Price value={product.price} className="text-[28px] leading-none" />
             <span className="label text-right leading-relaxed text-dim">
               {product.retail != null && <>Prix de sortie {formatPrice(product.retail)}<br /></>}
-              Sortie {product.releaseYear}
+              {product.releaseYear != null && <>Sortie {product.releaseYear}</>}
             </span>
           </div>
 
@@ -143,7 +148,7 @@ export function ProductView({ product }: { product: Product }) {
             Tout le stock →
           </Link>
         </div>
-        <ProductGrid products={related(product)} className="xl:grid-cols-4" />
+        <ProductGrid products={related(catalog.products, product)} className="xl:grid-cols-4" />
       </section>
 
       {/* mobile: sticky add-to-cart */}
@@ -178,5 +183,49 @@ function Details({ title, open, children }: { title: string; open?: boolean; chi
       </summary>
       <div className="mt-3 text-sm leading-relaxed text-muted">{children}</div>
     </details>
+  );
+}
+
+/** Shown to the logged-in admin only: take the pair off the site. */
+function AdminBar({ product }: { product: Product }) {
+  const { removePair } = useCatalog();
+  const router = useRouter();
+  const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const remove = async () => {
+    setBusy(true);
+    try {
+      await removePair(product);
+      router.push("/catalogue");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Suppression impossible.");
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-warm/50 bg-warm/10 px-4 py-3 text-sm">
+      <span className="flex items-center gap-2">
+        <ShieldCheck className="size-4" /> Mode admin
+      </span>
+      {error && <span className="text-destructive">{error}</span>}
+      {confirm ? (
+        <span className="flex items-center gap-2">
+          Retirer cette paire du site ?
+          <Button size="sm" variant="outline" onClick={() => setConfirm(false)} disabled={busy}>
+            Annuler
+          </Button>
+          <Button size="sm" onClick={remove} disabled={busy} className="bg-destructive text-white hover:bg-destructive/90">
+            {busy ? "Suppression…" : "Supprimer"}
+          </Button>
+        </span>
+      ) : (
+        <Button size="sm" variant="outline" onClick={() => setConfirm(true)}>
+          <Trash2 className="size-4" /> Supprimer la paire
+        </Button>
+      )}
+    </div>
   );
 }

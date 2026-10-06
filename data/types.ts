@@ -36,6 +36,8 @@ export interface SizeOption {
 }
 
 export interface Product {
+  /** database id (absent for the bundled demo pairs) */
+  id?: string;
   slug: string;
   name: string;
   brand: BrandId;
@@ -51,12 +53,13 @@ export interface Product {
   images: ProductImage[];
   /** ISO date the pair arrived in stock */
   arrivedAt: string;
-  releaseYear: number;
+  releaseYear?: number;
   description: string;
   featured?: boolean;
 }
 
-export type BrandId = "nike" | "jordan" | "asics" | "new-balance" | "prada" | "maison-margiela";
+/** brand slug, e.g. "new-balance"; known brands are listed in data/brands.ts */
+export type BrandId = string;
 
 export interface Brand {
   id: BrandId;

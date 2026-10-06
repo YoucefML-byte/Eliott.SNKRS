@@ -1,22 +1,22 @@
 "use client";
 
-import { BRANDS } from "@/data/brands";
-import { PRODUCTS } from "@/data/products";
-import { ALL_SIZES, PRICE_RANGES, type Filters } from "@/lib/products";
+import { useCatalog } from "@/lib/catalog/provider";
+import { allSizes, brandsOf, PRICE_RANGES, type Filters } from "@/lib/products";
 import { cn } from "@/lib/utils";
 
 const toggle = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
 
 export function FilterPanel({ filters, onChange }: { filters: Filters; onChange: (f: Filters) => void }) {
+  const { products } = useCatalog();
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch });
 
   return (
     <div className="grid gap-9">
       <Group title="Marque">
         <ul className="grid gap-1">
-          {BRANDS.map((b) => {
+          {brandsOf(products).map((b) => {
             const on = filters.brands.includes(b.id);
-            const n = PRODUCTS.filter((p) => p.brand === b.id).length;
+            const n = b.count;
             return (
               <li key={b.id}>
                 <label className="flex cursor-pointer items-center gap-3 py-1.5 text-sm text-muted hover:text-ink has-[:checked]:text-ink">
@@ -43,7 +43,7 @@ export function FilterPanel({ filters, onChange }: { filters: Filters; onChange:
 
       <Group title="Pointure EU">
         <div className="grid grid-cols-5 gap-1.5 lg:grid-cols-4">
-          {ALL_SIZES.map((s) => {
+          {allSizes(products).map((s) => {
             const on = filters.sizes.includes(s);
             return (
               <button

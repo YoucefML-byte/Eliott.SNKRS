@@ -1,21 +1,26 @@
+"use client";
+
 import Link from "next/link";
 
 import { ProductImage } from "@/components/product/product-image";
 import SneakerArt from "@/components/product/sneaker-art";
-import { PRODUCTS } from "@/data/products";
 import { COLLABS } from "@/data/site";
+import { useCatalog } from "@/lib/catalog/provider";
 import { cn } from "@/lib/utils";
 
 import { SectionHeading } from "./section-heading";
 
 export function Collabs() {
+  const { products } = useCatalog();
   return (
     <section id="collabs" className="scroll-mt-20 border-y border-line bg-surface">
       <div className="mx-auto max-w-[1360px] px-4 py-20 md:px-8 md:py-28">
         <SectionHeading eyebrow="Collaborations" title={<>Les collabs<br className="md:hidden" /> du moment</>} />
         <div className="grid grid-cols-2 gap-3 md:gap-5 lg:grid-cols-4">
           {COLLABS.map((c) => {
-            const items = PRODUCTS.filter((p) => p.collab?.toLowerCase().includes(c.query));
+            const items = products.filter((p) =>
+              `${p.collab ?? ""} ${p.colorway}`.toLowerCase().includes(c.query),
+            );
             // prefer a pair with real photos, shown as a tight crop of the main shot
             const hero = items.find((p) => p.images[0].src) ?? items[0];
             const photo = hero?.images[0].src ? hero.images[0] : undefined;

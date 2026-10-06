@@ -3,7 +3,7 @@ import Link from "next/link";
 import { brandName } from "@/data/brands";
 import type { Product } from "@/data/types";
 import { formatPrice, sizeValue } from "@/lib/format";
-import { availability, inStock } from "@/lib/products";
+import { availability, inStock, productHref } from "@/lib/products";
 import { cn } from "@/lib/utils";
 
 import { ProductBadges } from "./condition-badge";
@@ -17,7 +17,7 @@ export function ProductCard({ product, className }: { product: Product; classNam
 
   return (
     <Link
-      href={`/produit/${product.slug}`}
+      href={productHref(product.slug)}
       className={cn("group block outline-offset-4", sold && "opacity-70", className)}
     >
       <div className="relative overflow-hidden rounded-md">

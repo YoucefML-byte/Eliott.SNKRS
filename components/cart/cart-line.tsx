@@ -6,7 +6,7 @@ import { ProductImage } from "@/components/product/product-image";
 import { brandName } from "@/data/brands";
 import { useCart, type ResolvedLine } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
-import { sizeLabel } from "@/lib/products";
+import { productHref, sizeLabel } from "@/lib/products";
 import { cn } from "@/lib/utils";
 
 import { QuantityStepper } from "./quantity-stepper";
@@ -22,7 +22,7 @@ export function CartLineItem({
 }) {
   const cart = useCart();
   const { product, option } = line;
-  const href = `/produit/${product.slug}`;
+  const href = productHref(product.slug);
 
   return (
     <li className="flex gap-4 py-5">
