@@ -53,6 +53,8 @@ export function CheckoutView() {
       const el = f.elements.namedItem(k);
       if (el instanceof HTMLInputElement) el.value = v;
     }
+    const cgv = f.elements.namedItem("cgv");
+    if (cgv instanceof HTMLInputElement) cgv.checked = true;
   };
 
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -200,11 +202,27 @@ export function CheckoutView() {
           </Step>
 
           <div>
+            <label htmlFor="cgv" className="mb-4 flex cursor-pointer items-start gap-3 text-sm text-muted">
+              <input id="cgv" name="cgv" type="checkbox" required className="mt-0.5 size-4 shrink-0 accent-[var(--acc)]" />
+              <span>
+                J&apos;ai lu et j&apos;accepte les{" "}
+                <Link href="/cgv" target="_blank" className="text-ink underline underline-offset-4">
+                  conditions générales de vente
+                </Link>
+                , dont le droit de rétractation de 14 jours.
+              </span>
+            </label>
             <Button type="submit" size="lg" className="w-full" disabled={placing}>
               {placing ? "Paiement en cours…" : `Payer ${formatPrice(cart.subtotal + shipping)}`}
             </Button>
-            <p className="mt-3 text-center text-xs text-dim">
-              En validant, tu acceptes les conditions de vente d&apos;Eliott SNKRS.
+            <p className="mt-3 text-center text-xs leading-relaxed text-dim">
+              Tes coordonnées servent uniquement à traiter et livrer ta commande ; elles sont transmises au
+              transporteur et au prestataire de paiement, jamais revendues. Tu peux y accéder ou les faire
+              supprimer à tout moment :{" "}
+              <Link href="/confidentialite" className="underline underline-offset-4 hover:text-ink">
+                politique de confidentialité
+              </Link>
+              .
             </p>
           </div>
         </form>

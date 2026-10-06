@@ -9,6 +9,7 @@ import { CatalogProvider } from "@/lib/catalog/provider";
 
 import { AnnouncementBar } from "./announcement-bar";
 import { Header } from "./header";
+import { LegalBar } from "./legal-bar";
 
 /** Providers + éléments communs à toutes les pages. */
 export function SiteShell({ children }: { children: ReactNode }) {
@@ -18,6 +19,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
         <AnnouncementBar />
         <Header />
         <main className="min-h-[70vh]">{children}</main>
+        <LegalBar />
         <CartDrawer />
         <ProductFormSheet />
       </CartProvider>

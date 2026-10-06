@@ -74,3 +74,25 @@ de la base (`supabase/schema.sql`) — tout le monde peut lire le stock, seul un
 compte présent dans la table `admins` peut ajouter ou supprimer des paires et des photos.
 
 En local : copier `.env.example` en `.env.local` et y mettre les mêmes valeurs.
+
+## RGPD et informations légales
+
+Pages incluses, accessibles depuis le bas de chaque page :
+`/mentions-legales`, `/confidentialite` (données personnelles et cookies), `/cgv`.
+
+Avant la mise en ligne réelle, à faire par Eliott :
+
+1. Compléter `data/legal.ts` (nom, statut, SIRET, adresse, e-mail, téléphone,
+   médiateur de la consommation). Tant qu'un champ est vide, il s'affiche en
+   surbrillance « [À compléter : …] » sur le site.
+2. Choisir un **médiateur de la consommation** (obligatoire pour vendre aux
+   particuliers) — liste sur https://www.economie.gouv.fr/mediation-conso
+3. Créer le projet Supabase en **région Europe** et accepter son DPA.
+4. Tenir à jour le registre `docs/rgpd/registre-des-traitements.md`.
+5. Si un outil de statistiques ou de publicité est ajouté un jour : il faudra un
+   bandeau de consentement (« Refuser » aussi visible qu'« Accepter ») et mettre à
+   jour la politique de confidentialité. Aujourd'hui le site n'en a pas besoin :
+   il n'utilise que du stockage strictement nécessaire (panier, session admin).
+
+Ces textes sont des modèles sérieux mais ne remplacent pas la relecture d'un
+professionnel du droit avant l'ouverture de la boutique.

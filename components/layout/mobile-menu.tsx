@@ -51,11 +51,22 @@ export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => vo
         </ul>
       </nav>
 
+      <ul className="flex flex-wrap gap-x-5 gap-y-1 border-t border-line px-4 pt-4 text-xs text-muted">
+        <li>
+          <Link href="/mentions-legales" onClick={onClose}>Mentions légales</Link>
+        </li>
+        <li>
+          <Link href="/confidentialite" onClick={onClose}>Confidentialité</Link>
+        </li>
+        <li>
+          <Link href="/cgv" onClick={onClose}>CGV</Link>
+        </li>
+      </ul>
       <a
         href={SITE.instagramUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-3 border-t border-line px-4 pb-[calc(env(safe-area-inset-bottom)+20px)] pt-5 text-sm text-muted"
+        className="flex items-center gap-3 px-4 pb-[calc(env(safe-area-inset-bottom)+20px)] pt-4 text-sm text-muted"
       >
         <InstagramIcon className="text-acc-ink" />@{SITE.instagram}
       </a>

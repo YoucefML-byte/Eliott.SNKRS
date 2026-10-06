@@ -132,8 +132,8 @@ export function ProductView({ product }: { product: Product }) {
               ))}
             </Details>
             <Details title="Livraison et retours">
-              Envoi suivi en 48 h ouvrées. Les paires neuves peuvent être retournées sous 14 jours,
-              non portées et dans leur boîte d&apos;origine.
+              Envoi suivi en 48 h ouvrées. Tu disposes de 14 jours après réception pour changer d&apos;avis, sur
+              toutes les paires, neuves comme d&apos;occasion (voir les <Link href="/cgv" className="underline underline-offset-4">CGV</Link>).
             </Details>
           </div>
         </div>
