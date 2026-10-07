@@ -7,15 +7,25 @@ import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } fr
 import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
 import { BRANDS } from "@/data/brands";
-import { CATEGORIES, COLORS, DIMENSIONS, GENDERS, MOVEMENTS, ONE_SIZE, STRAPS, type CategoryId } from "@/data/taxonomy";
+import {
+  CATEGORIES,
+  COLORS,
+  DIMENSIONS,
+  GENDERS,
+  MOVEMENTS,
+  ONE_SIZE,
+  SHOE_SIZES,
+  STRAPS,
+  type CategoryId,
+} from "@/data/taxonomy";
 import type { Condition } from "@/data/types";
 import { preparePhoto } from "@/lib/catalog/images";
 import { useCatalog } from "@/lib/catalog/provider";
 import { brandsOf, productHref } from "@/lib/products";
 import { cn } from "@/lib/utils";
 
-// EU 36 → 47 in half sizes, written the French way ("42,5")
-const SIZES = Array.from({ length: 23 }, (_, i) => String(36 + i / 2).replace(".", ","));
+// EU 35 → 48 in half sizes, written the French way ("42,5")
+const SIZES = SHOE_SIZES;
 const GRADES = [10, 9, 8, 7, 6, 5];
 const MAX_PHOTOS = 8;
 

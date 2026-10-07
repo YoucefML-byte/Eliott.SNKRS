@@ -53,8 +53,8 @@ export const CATEGORIES: Category[] = [
       { id: "autres", label: "Autres chaussures" },
     ],
     filters: {
-      main: ["brand", "size", "color", "price", "availability"],
-      more: ["model", "gender", "condition", "collab"],
+      main: ["brand", "size", "condition", "color", "price"],
+      more: ["model", "gender", "collab"],
     },
   },
   {
@@ -69,8 +69,8 @@ export const CATEGORIES: Category[] = [
       { id: "autres", label: "Autres montres" },
     ],
     filters: {
-      main: ["brand", "sub", "price", "availability"],
-      more: ["movement", "caseSize", "material", "strap", "condition"],
+      main: ["brand", "sub", "condition", "price"],
+      more: ["movement", "caseSize", "material", "strap"],
     },
   },
   {
@@ -91,8 +91,8 @@ export const CATEGORIES: Category[] = [
       { id: "autres", label: "Autres" },
     ],
     filters: {
-      main: ["brand", "sub", "color", "price", "availability"],
-      more: ["material", "dimension", "condition"],
+      main: ["brand", "sub", "condition", "color", "price"],
+      more: ["material", "dimension"],
     },
   },
   {
@@ -108,20 +108,20 @@ export const CATEGORIES: Category[] = [
       { id: "autres", label: "Autres accessoires" },
     ],
     filters: {
-      main: ["brand", "sub", "price", "availability"],
-      more: ["color", "material", "condition"],
+      main: ["brand", "sub", "condition", "price"],
+      more: ["color", "material"],
     },
   },
 ];
 
 /** filtres de « Tout le stock » et des pages marque */
 export const ALL_FILTERS = {
-  main: ["category", "brand", "price", "availability"] as FilterKey[],
-  more: ["color", "condition", "collab", "size"] as FilterKey[],
+  main: ["category", "brand", "condition", "price"] as FilterKey[],
+  more: ["color", "collab", "size"] as FilterKey[],
 };
 export const BRAND_FILTERS = {
-  main: ["category", "price", "availability"] as FilterKey[],
-  more: ["color", "condition", "size"] as FilterKey[],
+  main: ["category", "condition", "price"] as FilterKey[],
+  more: ["color", "size"] as FilterKey[],
 };
 
 /** couleur dominante, pour le filtre Couleur (pastille affichée à côté) */
@@ -147,6 +147,9 @@ export const GENDERS = ["Homme", "Femme", "Mixte"] as const;
 export const MOVEMENTS = ["Automatique", "Manuel", "Quartz"] as const;
 export const STRAPS = ["Métal", "Cuir", "Caoutchouc", "Tissu", "Autre"] as const;
 export const DIMENSIONS = ["Mini", "Petit", "Moyen", "Grand"] as const;
+
+/** pointures EU proposées (filtre et formulaire admin), du 35 au 48 */
+export const SHOE_SIZES = Array.from({ length: 27 }, (_, i) => String(35 + i / 2).replace(".", ","));
 
 /** taille des articles sans pointure (montres, sacs, accessoires) */
 export const ONE_SIZE = "TU";

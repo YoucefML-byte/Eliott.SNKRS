@@ -8,6 +8,7 @@ import {
   categoryOf,
   COLORS,
   ONE_SIZE,
+  SHOE_SIZES,
   subOf,
   type CategoryId,
   type FilterKey,
@@ -92,9 +93,10 @@ export const FILTERS: Record<FilterKey, FilterDef> = {
   condition: {
     label: "État",
     param: "etat",
-    option: (o) => (o.condition === "Neuf" ? "neuf" : "occasion"),
-    optionLabel: (v) => (v === "neuf" ? "Neuf" : "Occasion"),
-    order: indexIn(["neuf", "occasion"]),
+    // « neuf », « occasion-9 », « occasion-8 »… (« occasion » : toutes les notes)
+    option: (o) => (o.condition === "Neuf" ? "neuf" : `occasion-${o.grade ?? 0}`),
+    optionLabel: (v) => (v === "neuf" ? "Neuf" : v === "occasion" ? "Occasion" : `Occasion ${v.split("-")[1]}/10`),
+    order: (v) => (v === "neuf" ? 0 : 100 - (Number(v.split("-")[1]) || 0)),
   },
   collab: { label: "Collaboration", param: "collab", values: (p) => [p.collab] },
   movement: { label: "Mouvement", param: "mouvement", values: (p) => [p.attributes?.movement] },
@@ -191,6 +193,8 @@ function matchingOptions(p: Product, sel: Selection, skip?: FilterKey) {
       // par défaut, les articles vendus sont masqués
       if (!wanted?.length) return key !== "availability" || o.stock > 0;
       const v = def.option(o);
+      // anciens liens ?etat=occasion : toutes les notes
+      if (key === "condition" && v?.startsWith("occasion") && wanted.includes("occasion")) return true;
       return v !== undefined && wanted.includes(v);
     }),
   );
@@ -237,6 +241,8 @@ export function facet(products: Product[], scope: Scope, s: ShopState, key: Filt
     const valuesOf = (opts: SizeOption[]) =>
       def.option ? opts.map(def.option) : (def.values?.(p) ?? []);
     for (const v of valuesOf(p.sizes)) if (v !== undefined) all.add(v);
+    // toutes les pointures sont proposées, même celles absentes du stock
+    if (key === "size" && categoryOf(p).sized) for (const s of SHOE_SIZES) all.add(s);
     if (s.q && !matchesQuery(p, s.q)) continue;
     if (!matchesProductFilters(p, s.sel, key)) continue;
     const opts = matchingOptions(p, s.sel, key);
