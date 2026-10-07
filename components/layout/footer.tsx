@@ -1,21 +1,22 @@
+"use client";
+
 import { ArrowUpRight, Lock } from "lucide-react";
 import Link from "next/link";
 
 import { InstagramIcon } from "@/components/brand/instagram-icon";
 import { LogoMark } from "@/components/brand/logo";
-import { BRANDS } from "@/data/brands";
 import { LEGAL } from "@/data/legal";
 import { SHIPPING, SITE } from "@/data/site";
+import { brandHref, CATEGORIES, categoryHref } from "@/data/taxonomy";
+import { useCatalog } from "@/lib/catalog/provider";
 import { formatPrice } from "@/lib/format";
+import { brandsOf } from "@/lib/products";
 
 const SHOP = [
+  ...CATEGORIES.map((c) => ({ href: categoryHref(c.id), label: c.label })),
+  { href: "/marques", label: "Toutes les marques" },
   { href: "/catalogue?tri=nouveautes", label: "Nouveautés" },
-  { href: "/catalogue", label: "Tout le stock" },
-  { href: "/catalogue?etat=neuf", label: "Pièces neuves" },
-  { href: "/catalogue?etat=occasion", label: "Pièces d'occasion" },
-  { href: "/#collabs", label: "Collabs" },
 ];
-
 const HELP = [
   { href: "/cgv/#livraison", label: "Livraison" },
   { href: "/cgv/#retours", label: "Retours sous 14 jours" },
@@ -53,6 +54,8 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
 }
 
 export function Footer() {
+  const { products } = useCatalog();
+  const brands = brandsOf(products.filter((p) => p.sizes.some((o) => o.stock > 0)));
   return (
     <footer className="relative overflow-hidden bg-ink text-white">
       {/* filet néon */}
@@ -93,8 +96,8 @@ export function Footer() {
             </Column>
 
             <Column title="Marques">
-              {BRANDS.slice(0, 6).map((b) => (
-                <FooterLink key={b.id} href={`/catalogue?marque=${b.id}`}>
+              {brands.slice(0, 6).map((b) => (
+                <FooterLink key={b.id} href={brandHref(b.id)}>
                   {b.name}
                 </FooterLink>
               ))}

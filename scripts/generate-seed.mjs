@@ -19,15 +19,15 @@ const json = (v) => `${q(JSON.stringify(v))}::jsonb`;
 
 const rows = PRODUCTS.map(
   (p) =>
-    `(${[q(p.slug), q(p.name), q(p.brand), q(p.colorway), q(p.collab), p.price, p.retail ?? "null", json(p.sizes), q(p.description), json(p.images), p.releaseYear, p.featured ? "true" : "false", q(`${p.arrivedAt}T12:00:00Z`)].join(", ")})`,
+    `(${[q(p.slug), q(p.name), q(p.brand), q(p.category ?? "chaussures"), q(p.subcategory ?? "sneakers"), q(p.model), q(p.gender), q(p.color), json(p.attributes ?? {}), q(p.colorway), q(p.collab), p.price, p.retail ?? "null", json(p.sizes), q(p.description), json(p.images), p.releaseYear, p.featured ? "true" : "false", q(`${p.arrivedAt}T12:00:00Z`)].join(", ")})`,
 );
 
 writeFileSync(
   join(root, "supabase/seed.sql"),
-  `-- Les paires de la maquette, à importer une fois (SQL Editor → Run).
+  `-- Les articles de la maquette, à importer une fois (SQL Editor → Run).
 -- Leurs photos restent servies par le site (chemins /products/…).
 insert into public.products
-  (slug, name, brand, colorway, collab, price, retail, sizes, description, images, release_year, featured, created_at)
+  (slug, name, brand, category, subcategory, model, gender, color, attributes, colorway, collab, price, retail, sizes, description, images, release_year, featured, created_at)
 values
 ${rows.join(",\n")}
 on conflict (slug) do nothing;

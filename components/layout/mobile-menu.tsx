@@ -6,10 +6,13 @@ import Link from "next/link";
 import { InstagramIcon } from "@/components/brand/instagram-icon";
 import { Logo } from "@/components/brand/logo";
 import { Sheet } from "@/components/ui/sheet";
-import { BRANDS } from "@/data/brands";
-import { NAV, SITE } from "@/data/site";
+import { SITE } from "@/data/site";
+import { useCatalog } from "@/lib/catalog/provider";
+
+import { navMenus } from "./nav-menus";
 
 export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const menus = navMenus(useCatalog().products);
   return (
     <Sheet open={open} onClose={onClose} side="left" label="Menu" className="max-w-none sm:max-w-[420px]">
       <div className="flex items-center justify-between border-b border-line px-4 py-3">
@@ -19,33 +22,35 @@ export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => vo
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-4 py-6">
+      <nav className="flex-1 overflow-y-auto px-4 py-4" aria-label="Navigation principale">
         <ul className="grid">
-          {NAV.map((item, i) => (
-            <li key={item.href}>
+          {menus.map((item) => (
+            <li key={item.href} className="border-b border-line py-4">
               <Link
                 href={item.href}
                 onClick={onClose}
-                className="flex items-baseline justify-between border-b border-line py-4 font-display text-[34px] font-medium uppercase leading-none tracking-tight active:text-acc-ink"
+                className="flex items-baseline justify-between font-display text-[32px] font-medium uppercase leading-none tracking-tight active:text-acc-ink"
               >
                 {item.label}
-                <span className="font-mono text-xs text-dim">0{i + 1}</span>
+                <span className="font-mono text-xs text-dim">
+                  {item.links.reduce((n, l) => n + l.count, 0) || ""}
+                </span>
               </Link>
-            </li>
-          ))}
-        </ul>
-
-        <p className="label mt-10 text-dim">Marques</p>
-        <ul className="mt-3 grid grid-cols-2 gap-2">
-          {BRANDS.map((b) => (
-            <li key={b.id}>
-              <Link
-                href={`/catalogue?marque=${b.id}`}
-                onClick={onClose}
-                className="block rounded-md border border-line px-4 py-3 text-sm hover:border-acc"
-              >
-                {b.name}
-              </Link>
+              {item.links.length > 0 && (
+                <ul className="mt-3 flex flex-wrap gap-2">
+                  {item.links.map((l) => (
+                    <li key={l.href}>
+                      <Link
+                        href={l.href}
+                        onClick={onClose}
+                        className="block rounded-full border border-line px-3.5 py-2 text-sm text-muted active:border-acc"
+                      >
+                        {l.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
           ))}
         </ul>

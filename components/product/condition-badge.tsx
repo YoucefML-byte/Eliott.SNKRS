@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { ONE_SIZE } from "@/data/taxonomy";
 import type { Product } from "@/data/types";
 import { availability, conditionLabel, isNew } from "@/lib/products";
 
@@ -6,10 +7,12 @@ import { availability, conditionLabel, isNew } from "@/lib/products";
 export function ProductBadges({ product }: { product: Product }) {
   const avail = availability(product);
   const cond = conditionLabel(product);
+  // une montre ou un sac est toujours une pièce unique : inutile de le signaler
+  const unique = product.sizes.every((s) => s.size === ONE_SIZE);
   const status =
     avail === "soldout"
       ? { label: "Épuisé", tone: "used" as const, desktopOnly: false }
-      : avail === "last"
+      : avail === "last" && !unique
         ? { label: "Dernière pièce", tone: "warm" as const, desktopOnly: false }
         : isNew(product)
           ? { label: "Arrivage", tone: "muted" as const, desktopOnly: true }

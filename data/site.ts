@@ -1,3 +1,5 @@
+import { CATEGORIES, type CategoryId } from "./taxonomy";
+
 export const SITE = {
   name: "Eliott SNKRS",
   instagram: "eliott.snkrs",
@@ -11,13 +13,11 @@ export const SITE = {
   ],
 };
 
-export const NAV = [
-  { label: "Nouveautés", href: "/catalogue?tri=nouveautes" },
-  { label: "Boutique", href: "/catalogue" },
-  { label: "Collabs", href: "/#collabs" },
-  { label: "Neuf / Occasion", href: "/#etats" },
+/** navigation principale : les catégories, puis les marques */
+export const NAV: { id: CategoryId | "marques"; label: string; href: string }[] = [
+  ...CATEGORIES.map((c) => ({ id: c.id, label: c.label, href: `/${c.id}` })),
+  { id: "marques", label: "Marques", href: "/marques" },
 ];
-
 export const SHIPPING = [
   { id: "relais", label: "Point relais", detail: "Mondial Relay · 3 à 5 jours", price: 4.9 },
   { id: "colissimo", label: "Domicile", detail: "Colissimo suivi · 48 h", price: 6.9 },

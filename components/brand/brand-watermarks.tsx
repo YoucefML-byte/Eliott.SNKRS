@@ -40,3 +40,15 @@ export function BrandWatermarks({ marks, className }: { marks: Watermark[]; clas
     </div>
   );
 }
+
+export const hasMark = (id: string): id is BrandMarkId => id in MARKS;
+
+/** Un logo seul, à la couleur du texte (index des marques). */
+export function BrandMark({ mark, className }: { mark: BrandMarkId; className?: string }) {
+  const { viewBox, d, evenodd } = MARKS[mark];
+  return (
+    <svg viewBox={viewBox} aria-hidden="true" className={cn("h-auto", className)}>
+      <path d={d} fill="currentColor" fillRule={evenodd ? "evenodd" : undefined} />
+    </svg>
+  );
+}

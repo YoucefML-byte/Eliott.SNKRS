@@ -17,6 +17,12 @@ interface Row {
   slug: string;
   name: string;
   brand: string;
+  category: string | null;
+  subcategory: string | null;
+  model: string | null;
+  gender: string | null;
+  color: string | null;
+  attributes: Product["attributes"] | null;
   colorway: string;
   collab: string | null;
   price: number | string;
@@ -44,6 +50,12 @@ const toProduct = (r: Row): Product => ({
   slug: r.slug,
   name: r.name,
   brand: r.brand,
+  category: (r.category ?? undefined) as Product["category"],
+  subcategory: r.subcategory ?? undefined,
+  model: r.model ?? undefined,
+  gender: (r.gender ?? undefined) as Product["gender"],
+  color: r.color ?? undefined,
+  attributes: r.attributes && Object.keys(r.attributes).length ? r.attributes : undefined,
   colorway: r.colorway,
   collab: r.collab ?? undefined,
   silhouette: "low",
@@ -119,6 +131,12 @@ export const supabaseBackend: CatalogBackend = {
         slug: p.slug,
         name: p.name,
         brand: p.brand,
+        category: p.category,
+        subcategory: p.subcategory,
+        model: p.model ?? null,
+        gender: p.gender ?? null,
+        color: p.color ?? null,
+        attributes: p.attributes ?? {},
         colorway: p.colorway,
         price: p.price,
         sizes: p.sizes,

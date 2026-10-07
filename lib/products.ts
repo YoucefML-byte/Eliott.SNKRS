@@ -1,7 +1,6 @@
 import { brandName } from "@/data/brands";
+import { categoryOf } from "@/data/taxonomy";
 import type { Condition, Product, SizeOption } from "@/data/types";
-
-import { sizeValue } from "./format";
 
 export const findProduct = (products: Product[], slug: string) =>
   products.find((p) => p.slug === slug);
@@ -62,75 +61,6 @@ export const PRICE_RANGES = [
   { id: "1000+", label: "Plus de 1 000 €", min: 1000, max: Infinity },
 ];
 
-export interface Filters {
-  q: string;
-  brands: string[];
-  sizes: string[];
-  condition: Condition | "";
-  price: string;
-  showSoldOut: boolean;
-  sort: SortKey;
-}
-
-export const EMPTY_FILTERS: Filters = {
-  q: "",
-  brands: [],
-  sizes: [],
-  condition: "",
-  price: "",
-  showSoldOut: false,
-  sort: "nouveautes",
-};
-
-// Sizes use a decimal comma (« 40,5 ») but the URL list is comma-separated,
-// so the URL carries them with a dot: ?taille=40.5,42
-const sizeToUrl = (size: string) => size.replace(",", ".");
-
-function sizesFromUrl(raw: string | null): string[] {
-  const parts = raw?.split(",").filter(Boolean) ?? [];
-  const sizes: string[] = [];
-  for (const part of parts) {
-    // old links wrote « 40,5 » as is: re-join the « 5 » to its whole size
-    if (/^\d$/.test(part) && sizes.length && !sizes[sizes.length - 1].includes(",")) {
-      sizes[sizes.length - 1] += `,${part}`;
-    } else {
-      sizes.push(part.replace(".", ","));
-    }
-  }
-  return [...new Set(sizes)];
-}
-
-export function readFilters(params: URLSearchParams): Filters {
-  const list = (k: string) => params.get(k)?.split(",").filter(Boolean) ?? [];
-  const cond = params.get("etat");
-  const sort = params.get("tri") as SortKey | null;
-  return {
-    q: params.get("q") ?? "",
-    brands: list("marque"),
-    sizes: sizesFromUrl(params.get("taille")),
-    condition: cond === "neuf" ? "Neuf" : cond === "occasion" ? "Occasion" : "",
-    price: params.get("prix") ?? "",
-    showSoldOut: params.get("epuises") === "1",
-    sort: SORTS.some((s) => s.id === sort) ? (sort as SortKey) : "nouveautes",
-  };
-}
-
-export function writeFilters(f: Filters): string {
-  const p = new URLSearchParams();
-  if (f.q) p.set("q", f.q);
-  if (f.brands.length) p.set("marque", f.brands.join(","));
-  if (f.sizes.length) p.set("taille", f.sizes.map(sizeToUrl).join(","));
-  if (f.condition) p.set("etat", f.condition.toLowerCase());
-  if (f.price) p.set("prix", f.price);
-  if (f.showSoldOut) p.set("epuises", "1");
-  if (f.sort !== "nouveautes") p.set("tri", f.sort);
-  const s = p.toString();
-  return s ? `?${s}` : "";
-}
-
-export const activeFilterCount = (f: Filters) =>
-  f.brands.length + f.sizes.length + (f.condition ? 1 : 0) + (f.price ? 1 : 0);
-
 const matchesQuery = (p: Product, q: string) => {
   const hay = `${fullName(p)} ${p.colorway} ${p.collab ?? ""}`.toLowerCase();
   return q
@@ -145,35 +75,6 @@ export function searchProducts(products: Product[], q: string, limit = 6) {
   return products.filter((p) => matchesQuery(p, q)).slice(0, limit);
 }
 
-export function filterProducts(f: Filters, products: Product[]) {
-  const range = PRICE_RANGES.find((r) => r.id === f.price);
-  const out = products.filter((p) => {
-    if (f.q && !matchesQuery(p, f.q)) return false;
-    if (f.brands.length && !f.brands.includes(p.brand)) return false;
-    if (range && (p.price < range.min || p.price >= range.max)) return false;
-    // size + condition must hold on the same pair
-    const pairs = p.sizes.filter(
-      (s) =>
-        (f.showSoldOut || s.stock > 0) &&
-        (!f.sizes.length || f.sizes.includes(s.size)) &&
-        (!f.condition || s.condition === f.condition),
-    );
-    return pairs.length > 0;
-  });
-
-  return out.sort((a, b) => {
-    if (f.sort === "prix-asc") return a.price - b.price;
-    if (f.sort === "prix-desc") return b.price - a.price;
-    return b.arrivedAt.localeCompare(a.arrivedAt);
-  });
-}
-
-/** every size present in the catalogue, sorted */
-export const allSizes = (products: Product[]) =>
-  [...new Set(products.flatMap((p) => p.sizes.map((s) => s.size)))].sort(
-    (a, b) => sizeValue(a) - sizeValue(b),
-  );
-
 /** brands that have at least one pair, with their count */
 export function brandsOf(products: Product[]) {
   const counts = new Map<string, number>();
@@ -186,6 +87,9 @@ export function brandsOf(products: Product[]) {
 export function related(products: Product[], p: Product, n = 4) {
   const others = products.filter((o) => o.slug !== p.slug && availability(o) !== "soldout");
   const score = (o: Product) =>
-    (o.collab && o.collab === p.collab ? 3 : 0) + (o.brand === p.brand ? 2 : 0) + (o.silhouette === p.silhouette ? 1 : 0);
+    (categoryOf(o).id === categoryOf(p).id ? 4 : 0) +
+    (o.collab && o.collab === p.collab ? 3 : 0) +
+    (o.brand === p.brand ? 2 : 0) +
+    (o.model && o.model === p.model ? 1 : 0);
   return others.sort((a, b) => score(b) - score(a)).slice(0, n);
 }

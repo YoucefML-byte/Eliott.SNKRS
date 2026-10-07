@@ -6,8 +6,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Breadcrumb } from "@/components/shop/breadcrumb";
 import { brandName } from "@/data/brands";
 import { SITE } from "@/data/site";
+import { brandHref, categoryHref, categoryOf, ONE_SIZE, sizeText, subHref, subOf } from "@/data/taxonomy";
 import type { Product } from "@/data/types";
 import { useCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
@@ -29,6 +31,20 @@ export function ProductView({ product }: { product: Product }) {
   const [added, setAdded] = useState(false);
   const sold = availability(product) === "soldout";
   const option = product.sizes.find((s) => s.size === size);
+  const cat = categoryOf(product);
+  const sub = subOf(product);
+  // montres, sacs, accessoires : pas de pointure à choisir
+  const sized = cat.sized && product.sizes.some((s) => s.size !== ONE_SIZE);
+  const specs = [
+    ["Modèle", product.model],
+    ["Couleur", product.color],
+    ["Genre", product.gender],
+    ["Mouvement", product.attributes?.movement],
+    ["Taille du boîtier", product.attributes?.caseSize],
+    ["Matière", product.attributes?.material],
+    ["Bracelet", product.attributes?.strap],
+    ["Taille", product.attributes?.dimension],
+  ].filter((s): s is [string, string] => Boolean(s[1]));
 
   const add = () => {
     if (!size) return;
@@ -43,22 +59,23 @@ export function ProductView({ product }: { product: Product }) {
     <div className="mx-auto max-w-[1360px] px-4 md:px-8">
       {catalog.admin && <AdminBar product={product} />}
 
-      <nav aria-label="Fil d'Ariane" className="label hidden py-6 text-dim md:block">
-        <Link href="/" className="hover:text-ink">Accueil</Link>
-        <span className="mx-2">/</span>
-        <Link href="/catalogue" className="hover:text-ink">Boutique</Link>
-        <span className="mx-2">/</span>
-        <Link href={`/catalogue?marque=${product.brand}`} className="hover:text-ink">
-          {brandName(product.brand)}
-        </Link>
-      </nav>
+      <Breadcrumb
+        className="py-5 md:py-6"
+        crumbs={[
+          { label: cat.label, href: categoryHref(cat.id) },
+          { label: sub.label, href: subHref(cat.id, sub.id) },
+          { label: product.name },
+        ]}
+      />
 
       <div className="grid gap-8 md:grid-cols-[1.25fr_1fr] md:gap-12 lg:gap-16">
         <ProductGallery product={product} />
 
         <div className="md:sticky md:top-24 md:self-start">
           <p className="label text-acc-ink">
-            {brandName(product.brand)}
+            <Link href={brandHref(product.brand)} className="hover:underline">
+              {brandName(product.brand)}
+            </Link>
             {product.collab && <span className="text-muted"> × {product.collab}</span>}
           </p>
           <h1 className="mt-3 font-display text-[40px] font-medium uppercase leading-[0.95] tracking-tight md:text-[52px]">
@@ -74,6 +91,7 @@ export function ProductView({ product }: { product: Product }) {
             </span>
           </div>
 
+          {sized ? (
           <div className="mt-8">
             <div className="mb-3 flex items-baseline justify-between">
               <h2 className="label text-ink">Pointure EU</h2>
@@ -87,6 +105,15 @@ export function ProductView({ product }: { product: Product }) {
                 `${sizeLabel(option)} · ${option.stock > 1 ? `${option.stock} paires` : "dernière paire"} dans cette pointure`}
             </p>
           </div>
+          ) : (
+            <p className="mt-8 flex items-center justify-between rounded-md border border-line px-4 py-3 text-sm">
+              <span className="text-muted">Taille unique</span>
+              <span className={cn("font-mono text-xs uppercase tracking-[0.1em]", option?.condition === "Neuf" ? "text-acc-ink" : "text-muted")}>
+                {sold ? "Vendu" : option ? sizeLabel(option) : ""}
+                {option && !sold && (option.stock > 1 ? ` · ${option.stock} en stock` : " · pièce unique")}
+              </span>
+            </p>
+          )}
 
           <div className="mt-6 hidden gap-3 md:grid">
             <Button size="lg" variant={size && !sold ? "primary" : "outline"} onClick={add} disabled={!size || sold}>
@@ -123,11 +150,24 @@ export function ProductView({ product }: { product: Product }) {
             <Details title="Description" open>
               {product.description}
             </Details>
+            {specs.length > 0 && (
+              <Details title="Caractéristiques">
+                <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5">
+                  {specs.map(([k, v]) => (
+                    <div key={k} className="contents">
+                      <dt className="text-dim">{k}</dt>
+                      <dd className="text-ink">{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </Details>
+            )}
             <Details title="État">
               {product.sizes.map((s) => (
                 <span key={s.size} className="block">
-                  EU {s.size} — {sizeLabel(s)}
-                  {s.condition === "Occasion" && " · nettoyée, défauts éventuels photographiés"}
+                  {sized ? `${sizeText(s.size)} — ` : ""}
+                  {sizeLabel(s)}
+                  {s.condition === "Occasion" && " · nettoyé, défauts éventuels photographiés"}
                 </span>
               ))}
             </Details>
@@ -155,7 +195,7 @@ export function ProductView({ product }: { product: Product }) {
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-ground/95 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3 backdrop-blur md:hidden">
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm">{size ? `EU ${size}` : "Pointure ?"}</p>
+            <p className="truncate text-sm">{size ? sizeText(size) : "Pointure ?"}</p>
             <p className="font-mono text-sm tabular-nums text-muted">{formatPrice(product.price)}</p>
           </div>
           <Button
@@ -213,7 +253,7 @@ function AdminBar({ product }: { product: Product }) {
       {error && <span className="text-destructive">{error}</span>}
       {confirm ? (
         <span className="flex items-center gap-2">
-          Retirer cette paire du site ?
+          Retirer cet article du site ?
           <Button size="sm" variant="outline" onClick={() => setConfirm(false)} disabled={busy}>
             Annuler
           </Button>
@@ -223,7 +263,7 @@ function AdminBar({ product }: { product: Product }) {
         </span>
       ) : (
         <Button size="sm" variant="outline" onClick={() => setConfirm(true)}>
-          <Trash2 className="size-4" /> Supprimer la paire
+          <Trash2 className="size-4" /> Supprimer l&apos;article
         </Button>
       )}
     </div>

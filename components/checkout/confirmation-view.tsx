@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { SHIPPING, SITE } from "@/data/site";
+import { sizeText } from "@/data/taxonomy";
 import { useCart } from "@/lib/cart";
 import { useCatalog } from "@/lib/catalog/provider";
 import { confirmOrder, PAYMENTS_LIVE, PaymentError, type PublicOrder } from "@/lib/payment";
@@ -153,7 +154,7 @@ function LiveConfirmation({ id }: { id: string }) {
   const lines: SummaryLine[] = order.items.map((i) => ({
     key: i.slug + i.size,
     name: i.name,
-    detail: `${i.colorway ? i.colorway + " · " : ""}EU ${i.size}`,
+    detail: [i.colorway, sizeText(i.size)].filter(Boolean).join(" · "),
     qty: i.qty,
     total: i.price * i.qty,
     product: findProduct(products, i.slug),

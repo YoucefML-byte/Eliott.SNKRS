@@ -4,6 +4,7 @@ import { Check, Package, Undo2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { sizeText } from "@/data/taxonomy";
 import { formatPrice } from "@/lib/format";
 import { listOrders, markShipped, type AdminOrder } from "@/lib/orders";
 import { cn } from "@/lib/utils";
@@ -89,7 +90,7 @@ function OrderCard({ order: o, onChange }: { order: AdminOrder; onChange: (id: s
         {o.items.map((i) => (
           <li key={i.slug + i.size}>
             {i.qty > 1 && `${i.qty} × `}
-            {i.name} · <span className="font-mono">EU {i.size}</span>
+            {i.name} · <span className="font-mono">{sizeText(i.size)}</span>
           </li>
         ))}
       </ul>

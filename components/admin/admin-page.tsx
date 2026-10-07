@@ -10,6 +10,7 @@ import { brandName } from "@/data/brands";
 import type { Product } from "@/data/types";
 import { DEMO_ADMIN } from "@/lib/catalog/demo";
 import { useCatalog } from "@/lib/catalog/provider";
+import { categoryOf, sizeText } from "@/data/taxonomy";
 import { formatPrice } from "@/lib/format";
 import { inStock, productHref } from "@/lib/products";
 import { cn } from "@/lib/utils";
@@ -26,8 +27,8 @@ function DemoNotice() {
   if (mode !== "demo") return null;
   return (
     <p className="rounded-md border border-warm/50 bg-warm/10 px-4 py-3 text-sm">
-      <strong>Mode démo</strong> : la base de données n&apos;est pas encore branchée. Les paires ajoutées
-      ou supprimées et les commandes simulées ne changent que dans ce navigateur.
+      <strong>Mode démo</strong> : la base de données n&apos;est pas encore branchée. Les articles ajoutés
+      ou supprimés et les commandes simulées ne changent que dans ce navigateur.
     </p>
   );
 }
@@ -55,7 +56,7 @@ function Login() {
       <div>
         <p className="label text-acc-ink">Espace admin</p>
         <h1 className="mt-3 font-display text-5xl font-medium uppercase leading-none tracking-tight">Connexion</h1>
-        <p className="mt-4 text-muted">Réservé à Eliott pour gérer les paires du site.</p>
+        <p className="mt-4 text-muted">Réservé à Eliott pour gérer les articles du site.</p>
       </div>
       <DemoNotice />
       <form onSubmit={submit} className="grid gap-4">
@@ -114,13 +115,13 @@ function Dashboard() {
           </h1>
           {tab === "stock" && (
             <p className="mt-3 font-mono text-sm text-muted">
-              {products.length} paire{products.length > 1 ? "s" : ""} en ligne
+              {products.length} article{products.length > 1 ? "s" : ""} en ligne
             </p>
           )}
         </div>
         <div className="flex flex-wrap gap-2">
           <Button size="lg" onClick={() => setFormOpen(true)}>
-            <Plus className="size-4" /> Ajouter une paire
+            <Plus className="size-4" /> Ajouter un article
           </Button>
           <Button size="lg" variant="outline" onClick={signOut}>
             <LogOut className="size-4" /> Déconnexion
@@ -160,8 +161,8 @@ function Dashboard() {
         <div className="h-40 animate-pulse rounded-md bg-surface" />
       ) : products.length === 0 ? (
         <div className="rounded-md border border-dashed border-line px-6 py-16 text-center">
-          <p className="font-display text-2xl uppercase">Aucune paire en ligne</p>
-          <p className="mt-3 text-muted">Ajoute ta première paire avec le bouton ci-dessus.</p>
+          <p className="font-display text-2xl uppercase">Aucun article en ligne</p>
+          <p className="mt-3 text-muted">Ajoute ton premier article avec le bouton ci-dessus.</p>
         </div>
       ) : (
         <ul className="divide-y divide-line border-y border-line">
@@ -202,7 +203,7 @@ function AdminRow({ product }: { product: Product }) {
           {product.name}
         </Link>
         <p className="truncate text-sm text-muted">
-          {product.colorway || "—"} · {sizes.length ? `EU ${sizes.join(", ")}` : "plus de pointure"}
+          {categoryOf(product).label} · {sizes.length ? sizes.map(sizeText).join(", ") : "vendu"}
         </p>
         {error && <p className="mt-1 text-sm text-destructive">{error}</p>}
       </div>

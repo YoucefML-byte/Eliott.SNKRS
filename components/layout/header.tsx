@@ -7,26 +7,21 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { Logo, LogoMark } from "@/components/brand/logo";
-import { BRANDS } from "@/data/brands";
-import { NAV } from "@/data/site";
 import { useCart } from "@/lib/cart";
 import { useCatalog } from "@/lib/catalog/provider";
 import { cn } from "@/lib/utils";
 
 import { MobileMenu } from "./mobile-menu";
+import { navMenus } from "./nav-menus";
 import { SearchOverlay } from "./search-overlay";
 
 export function Header() {
   const cart = useCart();
-  const { admin, setFormOpen } = useCatalog();
+  const { admin, setFormOpen, products } = useCatalog();
+  const menus = navMenus(products);
   const pathname = usePathname();
   const [menu, setMenu] = useState(false);
   const [search, setSearch] = useState(false);
-
-  const isActive = (href: string) => {
-    const path = href.split(/[?#]/)[0];
-    return path !== "/" && pathname.startsWith(path) && href === "/catalogue";
-  };
 
   return (
     <>
@@ -56,39 +51,51 @@ export function Header() {
             </span>
           </Link>
           <nav className="hidden justify-center lg:flex" aria-label="Navigation principale">
-            <ul className="flex items-center gap-1">
-              {NAV.map((item) => (
-                <li key={item.href} className="group relative">
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      "label relative block px-4 py-6 text-[12px] text-muted transition-colors hover:text-ink",
-                      isActive(item.href) && "text-ink",
-                    )}
-                  >
-                    {item.label}
-                    <span
+            <ul className="flex items-center">
+              {menus.map((item) => {
+                const active = pathname.startsWith(item.href);
+                return (
+                  <li key={item.href} className="group relative">
+                    <Link
+                      href={item.href}
                       className={cn(
-                        "absolute inset-x-4 bottom-4 h-px origin-left scale-x-0 bg-acc transition-transform duration-300 group-hover:scale-x-100",
-                        isActive(item.href) && "scale-x-100",
+                        "label relative block px-3.5 py-6 text-[12px] text-muted transition-colors hover:text-ink xl:px-4",
+                        active && "text-ink",
                       )}
-                    />
-                  </Link>
-                  {item.label === "Boutique" && (
-                    <div className="invisible absolute left-1/2 top-full w-56 -translate-x-1/2 translate-y-1 rounded-md border border-line bg-surface p-2 opacity-0 shadow-xl shadow-black/10 transition-all group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
-                      {BRANDS.map((b) => (
-                        <Link
-                          key={b.id}
-                          href={`/catalogue?marque=${b.id}`}
-                          className="block rounded-sm px-3 py-2.5 text-sm text-muted hover:bg-raised hover:text-ink"
-                        >
-                          {b.name}
-                        </Link>
-                      ))}
+                    >
+                      {item.label}
+                      <span
+                        className={cn(
+                          "absolute inset-x-3.5 bottom-4 h-px origin-left scale-x-0 bg-acc transition-transform duration-300 group-hover:scale-x-100 xl:inset-x-4",
+                          active && "scale-x-100",
+                        )}
+                      />
+                    </Link>
+                    <div className="invisible absolute left-1/2 top-full w-60 -translate-x-1/2 translate-y-1 rounded-md border border-line bg-surface p-2 opacity-0 shadow-xl shadow-black/10 transition-all group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+                      {item.links.length ? (
+                        item.links.map((l) => (
+                          <Link
+                            key={l.href}
+                            href={l.href}
+                            className="flex items-baseline justify-between rounded-sm px-3 py-2.5 text-sm text-muted hover:bg-raised hover:text-ink"
+                          >
+                            {l.label}
+                            <span className="font-mono text-[11px] text-dim">{l.count}</span>
+                          </Link>
+                        ))
+                      ) : (
+                        <p className="px-3 py-2.5 text-sm text-dim">Arrivages en préparation</p>
+                      )}
+                      <Link
+                        href={item.href}
+                        className="label mt-1 block border-t border-line px-3 pb-1.5 pt-3 text-[11px] text-acc-ink hover:text-ink"
+                      >
+                        {item.id === "marques" ? "Toutes les marques" : `Tout voir · ${item.label}`} →
+                      </Link>
                     </div>
-                  )}
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
           </nav>
 
@@ -98,14 +105,14 @@ export function Header() {
               <>
                 <button
                   onClick={() => setFormOpen(true)}
-                  aria-label="Ajouter une paire"
+                  aria-label="Ajouter un article"
                   className="hidden h-9 items-center gap-1.5 rounded-md bg-acc px-3 font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-on-acc hover:bg-[#5dff8f] sm:inline-flex"
                 >
-                  <Plus className="size-4" /> Ajouter une paire
+                  <Plus className="size-4" /> Ajouter un article
                 </button>
                 <button
                   onClick={() => setFormOpen(true)}
-                  aria-label="Ajouter une paire"
+                  aria-label="Ajouter un article"
                   className="grid size-11 place-items-center rounded-md text-acc-ink hover:bg-raised sm:hidden"
                 >
                   <Plus className="size-5" />

@@ -1,3 +1,5 @@
+import type { CategoryId } from "./taxonomy";
+
 export type Silhouette = "low" | "high" | "runner";
 
 export type ImageView = "side" | "medial" | "pair" | "detail";
@@ -27,12 +29,26 @@ export interface ProductImage {
 }
 
 export interface SizeOption {
-  /** EU size, e.g. "42,5" */
+  /** EU size, e.g. "42,5" — or "TU" (taille unique) for watches, bags… */
   size: string;
   condition: Condition;
   /** wear grade out of 10 for used pairs */
   grade?: number;
   stock: number;
+}
+
+/** caractéristiques propres à certaines catégories */
+export interface ProductAttributes {
+  /** montres : Automatique, Manuel, Quartz */
+  movement?: string;
+  /** montres : diamètre du boîtier, ex. « 40 mm » */
+  caseSize?: string;
+  /** matière principale : acier, cuir, toile… */
+  material?: string;
+  /** montres : Métal, Cuir, Caoutchouc… */
+  strap?: string;
+  /** maroquinerie : Mini, Petit, Moyen, Grand */
+  dimension?: string;
 }
 
 export interface Product {
@@ -41,6 +57,16 @@ export interface Product {
   slug: string;
   name: string;
   brand: BrandId;
+  /** catégorie (data/taxonomy.ts) ; absente = chaussures */
+  category?: CategoryId;
+  /** sous-catégorie de la catégorie, ex. "sneakers", "sacs-a-main" */
+  subcategory?: string;
+  /** modèle, ex. « Air Jordan 1 », « Speedmaster » */
+  model?: string;
+  gender?: "Homme" | "Femme" | "Mixte";
+  /** couleur dominante (COLORS) */
+  color?: string;
+  attributes?: ProductAttributes;
   /** collaboration or colorway line shown under the name */
   colorway: string;
   collab?: string;

@@ -1,12 +1,20 @@
 -- Eliott SNKRS — base de données du stock (Supabase / PostgreSQL)
 -- À exécuter une fois dans Supabase : SQL Editor → New query → coller → Run.
 
--- 1. Les paires ----------------------------------------------------------
+-- 1. Les articles ---------------------------------------------------------
 create table if not exists public.products (
   id           uuid primary key default gen_random_uuid(),
   slug         text not null unique,
   name         text not null,
   brand        text not null,
+  -- chaussures | montres | maroquinerie | accessoires (voir data/taxonomy.ts)
+  category     text not null default 'chaussures',
+  subcategory  text not null default 'sneakers',
+  model        text,
+  gender       text,
+  color        text,
+  -- { "movement", "caseSize", "material", "strap", "dimension" }
+  attributes   jsonb not null default '{}'::jsonb,
   colorway     text not null default '',
   collab       text,
   price        numeric(10, 2) not null check (price >= 0),
@@ -20,6 +28,15 @@ create table if not exists public.products (
   featured     boolean not null default false,
   created_at   timestamptz not null default now()
 );
+
+-- Bases créées avant les catégories : ajoute les colonnes manquantes
+alter table public.products add column if not exists category    text not null default 'chaussures';
+alter table public.products add column if not exists subcategory text not null default 'sneakers';
+alter table public.products add column if not exists model       text;
+alter table public.products add column if not exists gender      text;
+alter table public.products add column if not exists color       text;
+alter table public.products add column if not exists attributes  jsonb not null default '{}'::jsonb;
+create index if not exists products_category_idx on public.products (category, subcategory);
 
 -- 2. Qui est admin -------------------------------------------------------
 create table if not exists public.admins (

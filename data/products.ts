@@ -2,7 +2,8 @@ import { asset } from "@/lib/asset";
 
 import type { Product, SizeOption } from "./types";
 
-// Catalogue de démonstration : uniquement les paires fournies avec photos.
+// Catalogue de démonstration : uniquement les paires fournies avec photos
+// (toutes des sneakers).
 // Prix, pointures et états sont fictifs.
 // Photos : public/products/<slug>/1.webp … 5.webp
 
@@ -32,6 +33,10 @@ const photoProduct = (seed: Seed, views: number = PHOTO_VIEWS.length): Product =
 export const PRODUCTS: Product[] = [
   photoProduct({
     slug: "air-jordan-1-low-travis-scott-reverse-mocha",
+    category: "chaussures",
+    subcategory: "sneakers",
+    model: "Air Jordan 1",
+    color: "Marron",
     name: "Air Jordan 1 Low OG",
     brand: "jordan",
     collab: "Travis Scott",
@@ -57,6 +62,10 @@ export const PRODUCTS: Product[] = [
   }),
   photoProduct({
     slug: "off-white-nike-rubber-dunk-university-blue",
+    category: "chaussures",
+    subcategory: "sneakers",
+    model: "Air Rubber Dunk",
+    color: "Bleu",
     name: "Air Rubber Dunk",
     brand: "nike",
     collab: "Off-White",
@@ -82,6 +91,10 @@ export const PRODUCTS: Product[] = [
   }),
   photoProduct({
     slug: "corteiz-air-max-95-gutta-green",
+    category: "chaussures",
+    subcategory: "sneakers",
+    model: "Air Max 95",
+    color: "Vert",
     name: "Air Max 95 SP",
     brand: "nike",
     collab: "Corteiz",
@@ -107,6 +120,10 @@ export const PRODUCTS: Product[] = [
   }),
   photoProduct({
     slug: "asics-gel-kayano-14-black-silver",
+    category: "chaussures",
+    subcategory: "sneakers",
+    model: "Gel-Kayano 14",
+    color: "Noir",
     name: "Gel-Kayano 14",
     brand: "asics",
     colorway: "Black / Pure Silver",
@@ -130,6 +147,10 @@ export const PRODUCTS: Product[] = [
   }),
   photoProduct({
     slug: "nocta-hot-step-2-black",
+    category: "chaussures",
+    subcategory: "sneakers",
+    model: "Hot Step 2",
+    color: "Noir",
     name: "Hot Step 2",
     brand: "nike",
     collab: "NOCTA",
@@ -156,6 +177,10 @@ export const PRODUCTS: Product[] = [
   photoProduct(
     {
       slug: "new-balance-2002r-protection-pack-pink",
+    category: "chaussures",
+    subcategory: "sneakers",
+    model: "2002R",
+    color: "Rose",
       name: "2002R",
       brand: "new-balance",
       colorway: "Protection Pack · Rose / Bordeaux",
@@ -181,6 +206,10 @@ export const PRODUCTS: Product[] = [
   ),
   photoProduct({
     slug: "prada-americas-cup-red",
+    category: "chaussures",
+    subcategory: "sneakers",
+    model: "America's Cup",
+    color: "Rouge",
     name: "America's Cup",
     brand: "prada",
     colorway: "Rouge / Argent",
@@ -204,6 +233,10 @@ export const PRODUCTS: Product[] = [
   }),
   photoProduct({
     slug: "maison-margiela-replica-gat",
+    category: "chaussures",
+    subcategory: "sneakers",
+    model: "Replica GAT",
+    color: "Blanc",
     name: "Replica GAT",
     brand: "maison-margiela",
     colorway: "Blanc / Gris · semelle gomme",

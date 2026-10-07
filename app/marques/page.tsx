@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import { CatalogueRoute } from "@/components/shop/routes";
+import { BrandRoute } from "@/components/shop/routes";
 
-export const metadata: Metadata = { title: "Tout le stock" };
+export const metadata: Metadata = { title: "Marques" };
 
 export default function Page() {
   return (
     <Suspense>
-      <CatalogueRoute />
+      <BrandRoute />
     </Suspense>
   );
 }

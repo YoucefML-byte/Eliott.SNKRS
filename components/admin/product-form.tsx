@@ -7,6 +7,7 @@ import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } fr
 import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
 import { BRANDS } from "@/data/brands";
+import { CATEGORIES, COLORS, DIMENSIONS, GENDERS, MOVEMENTS, ONE_SIZE, STRAPS, type CategoryId } from "@/data/taxonomy";
 import type { Condition } from "@/data/types";
 import { preparePhoto } from "@/lib/catalog/images";
 import { useCatalog } from "@/lib/catalog/provider";
@@ -27,7 +28,7 @@ interface Photo {
 const inputClass =
   "h-12 w-full rounded-md border border-line bg-surface px-4 text-[15px] text-ink outline-none transition-colors placeholder:text-dim focus:border-acc";
 
-/** "Ajouter une paire" panel, opened from the header by the admin. */
+/** "Ajouter un article" panel, opened from the header by the admin. */
 export function ProductFormSheet() {
   const { admin, formOpen, setFormOpen } = useCatalog();
   if (!admin) return null;
@@ -35,7 +36,7 @@ export function ProductFormSheet() {
     <Sheet
       open={formOpen}
       onClose={() => setFormOpen(false)}
-      label="Ajouter une paire"
+      label="Ajouter un article"
       className="max-w-[600px]"
     >
       <ProductForm onDone={() => setFormOpen(false)} />
@@ -50,6 +51,8 @@ function ProductForm({ onDone }: { onDone: () => void }) {
   const fileInput = useRef<HTMLInputElement>(null);
 
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [category, setCategory] = useState<CategoryId>("chaussures");
+  const cat = CATEGORIES.find((c) => c.id === category)!;
   const [condition, setCondition] = useState<Condition>("Neuf");
   const [grade, setGrade] = useState(9);
   const [sizes, setSizes] = useState<string[]>([]);
@@ -99,7 +102,7 @@ function ProductForm({ onDone }: { onDone: () => void }) {
     const price = Number(text("price").replace(",", "."));
 
     if (!photos.length) return setError("Ajoute au moins une photo.");
-    if (!sizes.length) return setError("Choisis au moins une pointure.");
+    if (cat.sized && !sizes.length) return setError("Choisis au moins une pointure.");
     if (!(price > 0)) return setError("Indique un prix valide.");
 
     setError(null);
@@ -107,14 +110,23 @@ function ProductForm({ onDone }: { onDone: () => void }) {
       setStatus("Préparation des photos…");
       const prepared = await Promise.all(photos.map((p) => preparePhoto(p.file)));
       setStatus("Mise en ligne…");
+      const attributes = Object.fromEntries(
+        ["movement", "caseSize", "material", "strap", "dimension"].map((k) => [k, text(k)]).filter(([, v]) => v),
+      );
       const product = await addPair({
+        category,
+        subcategory: text("subcategory") || cat.subs[0].id,
+        model: text("model"),
+        gender: (text("gender") || undefined) as (typeof GENDERS)[number] | undefined,
+        color: text("color"),
+        attributes: Object.keys(attributes).length ? attributes : undefined,
         name: text("name"),
         brand: text("brand"),
         colorway: text("colorway"),
         price,
         condition,
         grade: condition === "Occasion" ? grade : undefined,
-        sizes: [...sizes].sort((a, b) => SIZES.indexOf(a) - SIZES.indexOf(b)),
+        sizes: cat.sized ? [...sizes].sort((a, b) => SIZES.indexOf(a) - SIZES.indexOf(b)) : [ONE_SIZE],
         description: text("description"),
         photos: prepared,
       });
@@ -129,7 +141,7 @@ function ProductForm({ onDone }: { onDone: () => void }) {
   return (
     <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center justify-between border-b border-line px-5 py-4">
-        <h2 className="font-display text-xl font-medium uppercase">Ajouter une paire</h2>
+        <h2 className="font-display text-xl font-medium uppercase">Ajouter un article</h2>
         <button
           type="button"
           onClick={onDone}
@@ -212,8 +224,41 @@ function ProductForm({ onDone }: { onDone: () => void }) {
           />
         </Field>
 
-        <Field label="Nom du modèle" htmlFor="name">
-          <input id="name" name="name" required placeholder="Air Jordan 1 Low OG" className={inputClass} />
+        <Field label="Catégorie">
+          <div className="grid grid-cols-2 gap-1 rounded-md border border-line p-1 sm:grid-cols-4" role="radiogroup" aria-label="Catégorie">
+            {CATEGORIES.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                role="radio"
+                aria-checked={category === c.id}
+                onClick={() => setCategory(c.id)}
+                className={cn(
+                  "h-10 rounded-sm text-sm transition-colors",
+                  category === c.id ? "bg-raised text-ink" : "text-muted hover:text-ink",
+                )}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+          <select key={category} id="subcategory" name="subcategory" aria-label={cat.subLabel} className={cn(inputClass, "mt-3")}>
+            {cat.subs.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        <Field label="Nom" htmlFor="name">
+          <input
+            id="name"
+            name="name"
+            required
+            placeholder={PLACEHOLDERS[category]}
+            className={inputClass}
+          />
         </Field>
 
         <div className="grid gap-5 sm:grid-cols-2">
@@ -245,9 +290,70 @@ function ProductForm({ onDone }: { onDone: () => void }) {
           </Field>
         </div>
 
-        <Field label="Coloris / collab" htmlFor="colorway" hint="Facultatif">
-          <input id="colorway" name="colorway" placeholder="Travis Scott · Reverse Mocha" className={inputClass} />
+        <Field label={category === "chaussures" ? "Coloris / collab" : "Référence / détail"} htmlFor="colorway" hint="Facultatif">
+          <input
+            id="colorway"
+            name="colorway"
+            placeholder={category === "chaussures" ? "Travis Scott · Reverse Mocha" : "Monogram, cadran bleu…"}
+            className={inputClass}
+          />
         </Field>
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field label="Couleur dominante" htmlFor="color" hint="Pour le filtre">
+            <select id="color" name="color" defaultValue="" className={inputClass}>
+              <option value="">—</option>
+              {COLORS.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.id}
+                </option>
+              ))}
+            </select>
+          </Field>
+          {(category === "chaussures" || category === "montres") && (
+            <Field label="Modèle" htmlFor="model" hint="Facultatif">
+              <input
+                id="model"
+                name="model"
+                placeholder={category === "montres" ? "Speedmaster" : "Air Jordan 1"}
+                className={inputClass}
+              />
+            </Field>
+          )}
+          {category === "chaussures" && (
+            <Field label="Genre" htmlFor="gender" hint="Facultatif">
+              <Select name="gender" options={GENDERS} />
+            </Field>
+          )}
+          {category === "montres" && (
+            <>
+              <Field label="Mouvement" htmlFor="movement">
+                <Select name="movement" options={MOVEMENTS} />
+              </Field>
+              <Field label="Taille du boîtier" htmlFor="caseSize" hint="Ex. 40 mm">
+                <input id="caseSize" name="caseSize" placeholder="40 mm" className={inputClass} />
+              </Field>
+              <Field label="Bracelet" htmlFor="strap">
+                <Select name="strap" options={STRAPS} />
+              </Field>
+            </>
+          )}
+          {category === "maroquinerie" && (
+            <Field label="Taille" htmlFor="dimension">
+              <Select name="dimension" options={DIMENSIONS} />
+            </Field>
+          )}
+          {category !== "chaussures" && (
+            <Field label="Matière" htmlFor="material" hint="Facultatif">
+              <input
+                id="material"
+                name="material"
+                placeholder={category === "montres" ? "Acier" : "Cuir de veau"}
+                className={inputClass}
+              />
+            </Field>
+          )}
+        </div>
 
         <Field label="État">
           <div className="grid grid-cols-2 rounded-md border border-line p-1" role="radiogroup" aria-label="État">
@@ -288,6 +394,7 @@ function ProductForm({ onDone }: { onDone: () => void }) {
           )}
         </Field>
 
+        {cat.sized ? (
         <Field label="Pointures disponibles" hint="Une paire par pointure cochée">
           <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-6">
             {SIZES.map((s) => (
@@ -308,6 +415,11 @@ function ProductForm({ onDone }: { onDone: () => void }) {
             ))}
           </div>
         </Field>
+        ) : (
+          <p className="rounded-md border border-line bg-surface px-4 py-3 text-sm text-muted">
+            Taille unique : une pièce est mise en vente.
+          </p>
+        )}
 
         <Field label="Description" htmlFor="description">
           <textarea
@@ -331,6 +443,26 @@ function ProductForm({ onDone }: { onDone: () => void }) {
         </Button>
       </div>
     </form>
+  );
+}
+
+const PLACEHOLDERS: Record<CategoryId, string> = {
+  chaussures: "Air Jordan 1 Low OG",
+  montres: "Speedmaster Moonwatch",
+  maroquinerie: "Speedy 25",
+  accessoires: "Lunettes Millionaire",
+};
+
+function Select({ name, options }: { name: string; options: readonly string[] }) {
+  return (
+    <select id={name} name={name} defaultValue="" className={inputClass}>
+      <option value="">—</option>
+      {options.map((o) => (
+        <option key={o} value={o}>
+          {o}
+        </option>
+      ))}
+    </select>
   );
 }
 

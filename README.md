@@ -18,11 +18,24 @@ Puis ouvrir http://localhost:3000.
 | Adresse | Contenu |
 | --- | --- |
 | `/` | Accueil : animation d'ouverture, nouveautés, collabs, marques, guide Neuf / Occasion |
-| `/catalogue` | Stock avec recherche, filtres (marque, pointure, état, prix) et tri |
-| `/produit/?p=<slug>` | Fiche produit : galerie photo, pointures avec l'état de chaque paire |
+| `/chaussures`, `/montres`, `/maroquinerie`, `/accessoires` | Catégories, avec leurs sous-catégories (`/chaussures/sneakers`, `/maroquinerie/sacs-a-main`…) |
+| `/marques` | Toutes les marques en stock ; `/marques/?m=nike` : tous les articles d'une marque, par catégorie |
+| `/catalogue` | Tout le stock, toutes catégories |
+| `/produit/?p=<slug>` | Fiche article : galerie photo, pointures (chaussures) ou taille unique, caractéristiques |
 | `/panier` | Panier (aussi disponible en tiroir depuis l'en-tête) |
 | `/checkout` | Commande et paiement (Stripe ou PayPal), puis `/checkout/confirmation` |
 | `/admin` | Espace admin : stock et commandes |
+
+## Organisation du catalogue
+
+Catégorie → sous-catégorie → articles → filtres. Tout est décrit dans
+`data/taxonomy.ts` : catégories, sous-catégories, filtres principaux et filtres
+avancés (« + Plus de filtres ») de chaque catégorie, couleurs proposées.
+
+- Une sous-catégorie sans article n'apparaît nulle part (menu, pages, puces).
+- Un filtre n'est proposé que s'il offre un vrai choix dans le rayon affiché.
+- Les chaussures ont des pointures ; montres, maroquinerie et accessoires sont
+  en taille unique (une pièce mise en vente).
 
 ## Modifier le contenu
 
@@ -41,10 +54,13 @@ Next.js (App Router), React, TypeScript, Tailwind CSS v4, structure shadcn/ui
 ## Espace admin (ajouter / retirer des paires)
 
 - Page de connexion : `/admin` (non référencée, à garder en favori).
-- Une fois connecté, un bouton **« Ajouter une paire »** apparaît dans l'en-tête :
-  photos (glisser-déposer, la première est la principale), nom, marque, coloris,
-  prix, état (neuf ou occasion avec note /10), pointures et description.
-- Sur chaque fiche produit, l'admin voit un bouton **« Supprimer la paire »**.
+- Une fois connecté, un bouton **« Ajouter un article »** apparaît dans l'en-tête :
+  photos (glisser-déposer, la première est la principale), catégorie et type,
+  nom, marque, prix, état (neuf ou occasion avec note /10), couleur, puis les
+  champs propres à la catégorie : pointures, modèle et genre (chaussures) ;
+  mouvement, boîtier, bracelet, matière (montres) ; taille et matière
+  (maroquinerie) ; matière (accessoires).
+- Sur chaque fiche, l'admin voit un bouton **« Supprimer l'article »**.
 
 ### Mode démo (par défaut)
 
@@ -55,7 +71,9 @@ ou supprimées ne changent que dans son navigateur. Utile pour montrer le parcou
 ### Brancher la vraie base de données (Supabase, offre gratuite)
 
 1. Créer un compte et un projet sur https://supabase.com (région Europe).
-2. **SQL Editor** → coller le contenu de `supabase/schema.sql` → **Run**.
+2. **SQL Editor** → coller le contenu de `supabase/schema.sql` → **Run**
+   (le script peut être relancé : sur une base existante, il ajoute les
+   colonnes des catégories).
 3. (Optionnel) importer les paires de la maquette : coller `supabase/seed.sql` → **Run**.
 4. **Authentication → Users → Add user** : créer le compte d'Eliott (e-mail + mot de passe).
 5. Le déclarer admin dans le SQL Editor :

@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { ProductImage } from "@/components/product/product-image";
 import { brandName } from "@/data/brands";
+import { sizeText } from "@/data/taxonomy";
 import { useCart, type ResolvedLine } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
 import { productHref, sizeLabel } from "@/lib/products";
@@ -45,14 +46,14 @@ export function CartLineItem({
           <p className="shrink-0 font-mono text-sm tabular-nums">{formatPrice(line.total)}</p>
         </div>
         <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.1em] text-dim">
-          EU {line.size} · {sizeLabel(option)}
+          {sizeText(line.size)} · {sizeLabel(option)}
         </p>
         <div className="mt-auto flex items-center justify-between pt-3">
           <QuantityStepper
             value={line.qty}
             max={option.stock}
             onChange={(q) => cart.setQty(product.slug, line.size, q)}
-            label={`Quantité, ${product.name} EU ${line.size}`}
+            label={`Quantité, ${product.name} ${sizeText(line.size)}`}
           />
           <button
             onClick={() => cart.remove(product.slug, line.size)}

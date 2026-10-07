@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { brandName } from "@/data/brands";
+import { categoryOf, ONE_SIZE, subOf } from "@/data/taxonomy";
 import type { Product } from "@/data/types";
 import { formatPrice, sizeValue } from "@/lib/format";
 import { availability, inStock, productHref } from "@/lib/products";
@@ -13,7 +14,9 @@ export function ProductCard({ product, className }: { product: Product; classNam
   const sold = availability(product) === "soldout";
   const sizes = inStock(product)
     .map((s) => s.size)
+    .filter((s) => s !== ONE_SIZE)
     .sort((a, b) => sizeValue(a) - sizeValue(b));
+  const sized = categoryOf(product).sized && sizes.length > 0;
 
   return (
     <Link
@@ -49,7 +52,7 @@ export function ProductCard({ product, className }: { product: Product; classNam
       </div>
 
       <p className="mt-2 truncate font-mono text-[11px] tracking-wide text-dim">
-        {sold ? "Plus de pointure disponible" : `EU ${sizes.join(" · ")}`}
+        {sold ? "Vendu" : sized ? `EU ${sizes.join(" · ")}` : subOf(product).label}
       </p>
     </Link>
   );

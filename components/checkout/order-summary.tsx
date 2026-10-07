@@ -1,4 +1,5 @@
 import { ProductImage } from "@/components/product/product-image";
+import { sizeText } from "@/data/taxonomy";
 import type { Product } from "@/data/types";
 import type { ResolvedLine } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
@@ -17,7 +18,7 @@ export const cartSummaryLines = (lines: ResolvedLine[]): SummaryLine[] =>
   lines.map((l) => ({
     key: l.slug + l.size,
     name: l.product.name,
-    detail: `${l.product.colorway} · EU ${l.size}`,
+    detail: [l.product.colorway, sizeText(l.size)].filter(Boolean).join(" · "),
     qty: l.qty,
     total: l.total,
     product: l.product,
