@@ -4,6 +4,7 @@ import { ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
+import { BrandWatermarks } from "@/components/brand/brand-watermarks";
 import { ProductGrid } from "@/components/product/product-grid";
 import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
@@ -48,10 +49,15 @@ export function CatalogueView() {
   const title = filters.q ? `« ${filters.q} »` : filters.brands.length === 1 ? brandName(filters.brands[0]) : "Le stock";
 
   return (
-    <div className="mx-auto max-w-[1360px] px-4 pb-24 md:px-8">
+    <div className="relative">
+    <BrandWatermarks
+      className="bottom-auto h-[380px] [mask-image:linear-gradient(to_bottom,black_55%,transparent)] md:h-[420px]"
+      marks={[{ mark: "nike", className: "-right-[22vw] -top-[10px] w-[88vw] rotate-[-6deg] opacity-[0.045] md:-right-[6vw] md:-top-[150px] md:w-[46vw]" }]}
+    />
+    <div className="relative mx-auto max-w-[1360px] px-4 pb-24 md:px-8">
       <div className="flex flex-col gap-6 pb-8 pt-10 md:flex-row md:items-end md:justify-between md:pt-16">
         <div>
-          <p className="label text-acc-ink">Sneakers · neuves et occasion</p>
+          <p className="label text-acc-ink">Sneakers · maroquinerie · accessoires</p>
           <h1 className="mt-3 font-display text-5xl font-medium uppercase leading-none tracking-tight md:text-7xl">
             {title}
           </h1>
@@ -117,8 +123,8 @@ export function CatalogueView() {
             <ProductGrid products={results} className="xl:grid-cols-3" />
           ) : (
             <div className="rounded-md border border-dashed border-line px-6 py-20 text-center">
-              <p className="font-display text-2xl uppercase">Aucune paire ne correspond</p>
-              <p className="mt-3 text-muted">Retire un filtre ou demande-nous la paire sur Instagram.</p>
+              <p className="font-display text-2xl uppercase">Aucun article ne correspond</p>
+              <p className="mt-3 text-muted">Retire un filtre ou demande-nous la pièce sur Instagram.</p>
               <Button variant="outline" className="mt-8" onClick={() => update(EMPTY_FILTERS)}>
                 Tout réinitialiser
               </Button>
@@ -146,6 +152,7 @@ export function CatalogueView() {
           </Button>
         </div>
       </Sheet>
+    </div>
     </div>
   );
 }

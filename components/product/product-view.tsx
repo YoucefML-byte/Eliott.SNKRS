@@ -46,7 +46,7 @@ export function ProductView({ product }: { product: Product }) {
       <nav aria-label="Fil d'Ariane" className="label hidden py-6 text-dim md:block">
         <Link href="/" className="hover:text-ink">Accueil</Link>
         <span className="mx-2">/</span>
-        <Link href="/catalogue" className="hover:text-ink">Sneakers</Link>
+        <Link href="/catalogue" className="hover:text-ink">Boutique</Link>
         <span className="mx-2">/</span>
         <Link href={`/catalogue?marque=${product.brand}`} className="hover:text-ink">
           {brandName(product.brand)}
@@ -107,7 +107,7 @@ export function ProductView({ product }: { product: Product }) {
           <ul className="mt-8 grid gap-3 text-sm text-muted">
             <li className="flex gap-3">
               <ShieldCheck className="size-5 shrink-0 text-acc-ink" />
-              Authentifiée par Eliott avant l&apos;envoi, photos de la paire sur demande.
+              Authentifiée par Eliott avant l&apos;envoi, photos supplémentaires sur demande.
             </li>
             <li className="flex gap-3">
               <Truck className="size-5 shrink-0 text-acc-ink" />
@@ -115,7 +115,7 @@ export function ProductView({ product }: { product: Product }) {
             </li>
             <li className="flex gap-3">
               <PackageCheck className="size-5 shrink-0 text-acc-ink" />
-              Double boîte et emballage protégé.
+              Double emballage protégé.
             </li>
           </ul>
 
@@ -123,7 +123,7 @@ export function ProductView({ product }: { product: Product }) {
             <Details title="Description" open>
               {product.description}
             </Details>
-            <Details title="État de la paire">
+            <Details title="État">
               {product.sizes.map((s) => (
                 <span key={s.size} className="block">
                   EU {s.size} — {sizeLabel(s)}
@@ -133,7 +133,7 @@ export function ProductView({ product }: { product: Product }) {
             </Details>
             <Details title="Livraison et retours">
               Envoi suivi en 48 h ouvrées. Tu disposes de 14 jours après réception pour changer d&apos;avis, sur
-              toutes les paires, neuves comme d&apos;occasion (voir les <Link href="/cgv" className="underline underline-offset-4">CGV</Link>).
+              tous les articles, neufs comme d&apos;occasion (voir les <Link href="/cgv" className="underline underline-offset-4">CGV</Link>).
             </Details>
           </div>
         </div>

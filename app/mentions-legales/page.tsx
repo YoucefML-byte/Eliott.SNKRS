@@ -60,7 +60,7 @@ export default function Page() {
           .
         </p>
         <p>
-          Le stock et les photos des paires sont enregistrés dans une base de données Supabase, hébergée dans
+          Le stock et les photos des articles sont enregistrés dans une base de données Supabase, hébergée dans
           l&apos;Union européenne.
         </p>
       </Section>
@@ -71,8 +71,8 @@ export default function Page() {
           reproduction sans autorisation écrite est interdite.
         </p>
         <p>
-          Les noms de marques et de modèles cités (Nike, Jordan, Adidas, New Balance, Asics, Prada, Maison Margiela,
-          etc.) appartiennent à leurs propriétaires respectifs. {LEGAL.brand} est un revendeur indépendant de paires
+          Les noms et logos de marques et de modèles cités (Nike, Jordan, New Balance, Asics, Off-White, Prada, Maison
+          Margiela, Louis Vuitton, Gucci, Supreme, etc.) appartiennent à leurs propriétaires respectifs. {LEGAL.brand} est un revendeur indépendant d&apos;articles
           authentiques : il n&apos;est ni affilié à ces marques, ni sponsorisé ou approuvé par elles.
         </p>
       </Section>

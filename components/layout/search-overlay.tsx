@@ -76,7 +76,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
             </div>
           </div>
         ) : results.length === 0 ? (
-          <p className="mt-8 text-muted">Aucune paire ne correspond à « {q} ». Essaie un autre modèle.</p>
+          <p className="mt-8 text-muted">Aucun article ne correspond à « {q} ». Essaie un autre modèle.</p>
         ) : (
           <>
             <ul className="mt-6 grid gap-x-6 gap-y-2 md:grid-cols-2">

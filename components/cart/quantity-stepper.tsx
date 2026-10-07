@@ -18,7 +18,7 @@ export function QuantityStepper({
       <button
         onClick={() => onChange(value - 1)}
         disabled={value <= 1}
-        aria-label="Retirer une paire"
+        aria-label="Retirer un exemplaire"
         className="grid h-full w-9 place-items-center text-muted hover:text-ink disabled:opacity-30"
       >
         <Minus className="size-3.5" />
@@ -29,7 +29,7 @@ export function QuantityStepper({
       <button
         onClick={() => onChange(value + 1)}
         disabled={value >= max}
-        aria-label="Ajouter une paire"
+        aria-label="Ajouter un exemplaire"
         title={value >= max ? "Plus de stock dans cette pointure" : undefined}
         className="grid h-full w-9 place-items-center text-muted hover:text-ink disabled:opacity-30"
       >

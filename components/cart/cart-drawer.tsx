@@ -29,7 +29,7 @@ export function CartDrawer() {
       {cart.lines.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-5 px-8 text-center">
           <p className="font-display text-2xl uppercase">Ton panier est vide</p>
-          <p className="text-sm text-muted">Les nouvelles paires arrivent chaque semaine.</p>
+          <p className="text-sm text-muted">De nouvelles pièces arrivent chaque semaine.</p>
           <Link href="/catalogue" onClick={close} className={buttonVariants()}>
             Voir le stock
           </Link>

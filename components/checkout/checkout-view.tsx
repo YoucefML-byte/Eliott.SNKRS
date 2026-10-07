@@ -147,8 +147,8 @@ export function CheckoutView() {
   if (cart.lines.length === 0 && !placing) {
     return (
       <div className="mx-auto max-w-xl px-4 py-24 text-center">
-        <h1 className="font-display text-4xl uppercase">Aucune paire à commander</h1>
-        <p className="mt-4 text-muted">Ajoute une paire au panier pour passer commande.</p>
+        <h1 className="font-display text-4xl uppercase">Aucun article à commander</h1>
+        <p className="mt-4 text-muted">Ajoute un article au panier pour passer commande.</p>
         <Link href="/catalogue" className={buttonVariants({ className: "mt-8" })}>
           Voir le stock
         </Link>

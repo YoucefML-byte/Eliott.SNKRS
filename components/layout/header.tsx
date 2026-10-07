@@ -74,7 +74,7 @@ export function Header() {
                       )}
                     />
                   </Link>
-                  {item.label === "Sneakers" && (
+                  {item.label === "Boutique" && (
                     <div className="invisible absolute left-1/2 top-full w-56 -translate-x-1/2 translate-y-1 rounded-md border border-line bg-surface p-2 opacity-0 shadow-xl shadow-black/10 transition-all group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
                       {BRANDS.map((b) => (
                         <Link

@@ -10,9 +10,9 @@ import { formatPrice } from "@/lib/format";
 
 const SHOP = [
   { href: "/catalogue?tri=nouveautes", label: "Nouveautés" },
-  { href: "/catalogue", label: "Toutes les sneakers" },
-  { href: "/catalogue?etat=neuf", label: "Paires neuves" },
-  { href: "/catalogue?etat=occasion", label: "Paires d'occasion" },
+  { href: "/catalogue", label: "Tout le stock" },
+  { href: "/catalogue?etat=neuf", label: "Pièces neuves" },
+  { href: "/catalogue?etat=occasion", label: "Pièces d'occasion" },
   { href: "/#collabs", label: "Collabs" },
 ];
 
@@ -69,7 +69,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="mt-6 leading-relaxed text-white/65">
-              Sneakers neuves et d&apos;occasion, authentifiées une par une et expédiées sous 48&nbsp;h. Livraison
+              Sneakers, maroquinerie et accessoires, neufs et d&apos;occasion, authentifiés un par un et expédiés sous 48&nbsp;h. Livraison
               offerte dès {formatPrice(SITE.freeShippingFrom)}.
             </p>
             <a

@@ -30,10 +30,11 @@ export default function Page() {
 
       <Section title="2. Produits">
         <p>
-          {LEGAL.brand} vend des sneakers authentiques, neuves ou d&apos;occasion. Chaque paire d&apos;occasion est
-          nettoyée, inspectée et notée sur 10 ; sa note et ses éventuels défauts sont indiqués sur la fiche produit.
-          Les photos sont celles de la paire ou d&apos;une paire strictement identique. Les quantités étant souvent
-          limitées à une paire par pointure, les offres sont valables dans la limite des stocks disponibles.
+          {LEGAL.brand} vend des sneakers, des articles de maroquinerie et des accessoires (dont des montres)
+          authentiques, neufs ou d&apos;occasion. Chaque article d&apos;occasion est nettoyé, inspecté et noté sur 10 ;
+          sa note et ses éventuels défauts sont indiqués sur la fiche produit. Les photos sont celles de l&apos;article
+          ou d&apos;un article strictement identique. Les quantités étant souvent limitées à une pièce par modèle et
+          par taille, les offres sont valables dans la limite des stocks disponibles.
         </p>
       </Section>
 
@@ -53,8 +54,8 @@ export default function Page() {
           de ces prestataires ; {LEGAL.brand} n&apos;a jamais accès aux numéros de carte.
         </p>
         <p>
-          Chaque paire étant une pièce unique, les paires d&apos;une commande sont réservées pendant 30 minutes le
-          temps du paiement. Passé ce délai sans paiement, la réservation est annulée et les paires sont remises en
+          Chaque article étant une pièce unique, les articles d&apos;une commande sont réservés pendant 30 minutes le
+          temps du paiement. Passé ce délai sans paiement, la réservation est annulée et les articles sont remis en
           vente. La commande est ferme dès la confirmation du paiement, affichée à l&apos;écran ; les reçus de
           paiement sont envoyés par e-mail par Stripe ou PayPal.
         </p>
@@ -69,7 +70,7 @@ export default function Page() {
           ))}
         </ul>
         <p>
-          Les paires sont expédiées sous 48 heures ouvrées après le paiement, dans un emballage protégé avec suivi.
+          Les articles sont expédiés sous 48 heures ouvrées après le paiement, dans un emballage protégé avec suivi.
           En cas de retard de plus de 30 jours, vous pouvez annuler la commande et être remboursé.
         </p>
       </Section>
@@ -78,30 +79,30 @@ export default function Page() {
         <p>
           Vous disposez de 14 jours à compter de la réception de votre commande pour vous rétracter, sans avoir à
           justifier de motif (articles L221-18 et suivants du Code de la consommation). Ce droit s&apos;applique à
-          toutes les paires, neuves comme d&apos;occasion.
+          tous les articles, neufs comme d&apos;occasion.
         </p>
         <p>
           Pour l&apos;exercer, envoyez une déclaration claire (par exemple le modèle ci-dessous) à{" "}
-          <Fill value={LEGAL.email} label="e-mail" />, puis renvoyez la paire dans les 14 jours suivant votre
-          déclaration, dans l&apos;état où vous l&apos;avez reçue, avec sa boîte. Les frais de retour sont à votre
+          <Fill value={LEGAL.email} label="e-mail" />, puis renvoyez l&apos;article dans les 14 jours suivant votre
+          déclaration, dans l&apos;état où vous l&apos;avez reçu, avec sa boîte et ses accessoires. Les frais de retour sont à votre
           charge. Le remboursement, frais de livraison initiaux inclus (sur la base du mode standard), intervient sous
-          14 jours après réception de la paire, avec le même moyen de paiement.
+          14 jours après réception de l&apos;article, avec le même moyen de paiement.
         </p>
         <p className="rounded-md border border-line bg-surface p-4 text-sm">
           <strong>Modèle de formulaire de rétractation</strong>
           <br />À l&apos;attention de <Fill value={LEGAL.ownerName} label="nom" /> ({LEGAL.brand}),{" "}
           <Fill value={LEGAL.address} label="adresse" />, <Fill value={LEGAL.email} label="e-mail" /> :
           <br />
-          Je vous notifie par la présente ma rétractation du contrat portant sur la vente de la paire ci-dessous :
-          [modèle, pointure] — commandée le [date] / reçue le [date] — nom : [votre nom] — adresse : [votre adresse] —
+          Je vous notifie par la présente ma rétractation du contrat portant sur la vente de l&apos;article ci-dessous :
+          [modèle, taille ou pointure] — commandée le [date] / reçue le [date] — nom : [votre nom] — adresse : [votre adresse] —
           date : [date].
         </p>
       </Section>
 
       <Section title="7. Garanties légales">
         <p>
-          Toutes les paires bénéficient de la garantie légale de conformité (articles L217-3 et suivants du Code de la
-          consommation) et de la garantie des vices cachés (articles 1641 et suivants du Code civil). Pour une paire
+          Tous les articles bénéficient de la garantie légale de conformité (articles L217-3 et suivants du Code de la
+          consommation) et de la garantie des vices cachés (articles 1641 et suivants du Code civil). Pour un article
           d&apos;occasion, l&apos;état décrit sur la fiche produit (note et défauts signalés) fait partie des
           caractéristiques convenues.
         </p>
@@ -109,8 +110,8 @@ export default function Page() {
 
       <Section title="8. Authenticité" id="authenticite">
         <p>
-          Chaque paire est contrôlée avant l&apos;envoi. Si une paire s&apos;avérait non authentique, elle serait
-          reprise et intégralement remboursée, frais de retour inclus.
+          Chaque article est contrôlé avant l&apos;envoi. S&apos;il s&apos;avérait non authentique, il serait
+          repris et intégralement remboursé, frais de retour inclus.
         </p>
       </Section>
 

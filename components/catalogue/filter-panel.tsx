@@ -106,7 +106,7 @@ export function FilterPanel({ filters, onChange }: { filters: Filters; onChange:
       </Group>
 
       <label className="flex cursor-pointer items-center justify-between gap-4 text-sm text-muted">
-        Afficher les paires vendues
+        Afficher les articles vendus
         <input
           type="checkbox"
           checked={filters.showSoldOut}

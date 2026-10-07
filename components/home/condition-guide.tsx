@@ -1,17 +1,21 @@
+import { BrandWatermarks } from "@/components/brand/brand-watermarks";
 import { GRADES } from "@/data/site";
 
 export function ConditionGuide() {
   return (
-    <section id="etats" className="scroll-mt-20 border-y border-line bg-surface">
-      <div className="mx-auto grid max-w-[1360px] gap-12 px-4 py-20 md:px-8 md:py-28 lg:grid-cols-[1fr_1.3fr] lg:gap-20">
+    <section id="etats" className="relative scroll-mt-20 border-y border-line bg-surface">
+      <BrandWatermarks
+        marks={[{ mark: "gucci", className: "-left-[8vw] top-[18px] w-[118vw] opacity-[0.045] md:-left-[3vw] md:bottom-[5%] md:top-auto md:w-[64vw]" }]}
+      />
+      <div className="relative mx-auto grid max-w-[1360px] gap-12 px-4 py-20 md:px-8 md:py-28 lg:grid-cols-[1fr_1.3fr] lg:gap-20">
         <div>
           <p className="label text-acc-ink">Neuf ou occasion</p>
           <h2 className="mt-3 font-display text-4xl font-medium uppercase leading-[0.95] tracking-tight md:text-6xl">
-            Chaque paire a sa note.
+            Chaque pièce a sa note.
           </h2>
           <p className="mt-6 max-w-[46ch] leading-relaxed text-muted">
-            Les paires d&apos;occasion sont nettoyées, inspectées et notées sur 10. La note est affichée pour
-            chaque pointure, avant l&apos;achat.
+            Les pièces d&apos;occasion sont nettoyées, inspectées et notées sur 10. La note est affichée sur
+            chaque fiche, avant l&apos;achat.
           </p>
         </div>
         <ol className="grid gap-px overflow-hidden rounded-md border border-line bg-line">

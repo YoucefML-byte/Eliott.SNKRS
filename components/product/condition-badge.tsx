@@ -10,7 +10,7 @@ export function ProductBadges({ product }: { product: Product }) {
     avail === "soldout"
       ? { label: "Épuisé", tone: "used" as const, desktopOnly: false }
       : avail === "last"
-        ? { label: "Dernière paire", tone: "warm" as const, desktopOnly: false }
+        ? { label: "Dernière pièce", tone: "warm" as const, desktopOnly: false }
         : isNew(product)
           ? { label: "Arrivage", tone: "muted" as const, desktopOnly: true }
           : null;

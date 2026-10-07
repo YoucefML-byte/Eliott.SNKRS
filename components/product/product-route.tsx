@@ -32,7 +32,7 @@ export function ProductRoute() {
 
   return (
     <div className="mx-auto max-w-xl px-4 py-32 text-center">
-      <h1 className="font-display text-5xl uppercase">Paire introuvable</h1>
+      <h1 className="font-display text-5xl uppercase">Article introuvable</h1>
       <p className="mt-4 text-muted">Elle a peut-être déjà été vendue.</p>
       <Link href="/catalogue" className={buttonVariants({ className: "mt-8" })}>
         Voir le stock

@@ -5,7 +5,7 @@ export const SITE = {
   instagramDm: "https://ig.me/m/eliott.snkrs",
   freeShippingFrom: 300,
   announcements: [
-    "Paires authentifiées une par une",
+    "Pièces authentifiées une par une",
     "Expédition suivie sous 48 h",
     "Livraison offerte dès 300 €",
   ],
@@ -13,7 +13,7 @@ export const SITE = {
 
 export const NAV = [
   { label: "Nouveautés", href: "/catalogue?tri=nouveautes" },
-  { label: "Sneakers", href: "/catalogue" },
+  { label: "Boutique", href: "/catalogue" },
   { label: "Collabs", href: "/#collabs" },
   { label: "Neuf / Occasion", href: "/#etats" },
 ];
@@ -28,9 +28,9 @@ export type ShippingId = (typeof SHIPPING)[number]["id"];
 
 /** wear grades shown in the condition guide */
 export const GRADES = [
-  { grade: "Neuf", score: 10, text: "Jamais portée, étiquettes et boîte d'origine." },
+  { grade: "Neuf", score: 10, text: "Jamais portée, étiquettes, boîte et accessoires d'origine." },
   { grade: "9/10", score: 9, text: "Portée une ou deux fois. Aucune marque visible à un mètre." },
-  { grade: "8/10", score: 8, text: "Légers plis sur l'avant, semelle à peine marquée." },
+  { grade: "8/10", score: 8, text: "Légères traces d'usage visibles de près : plis, micro-rayures." },
   { grade: "7/10", score: 7, text: "Portée régulièrement, nettoyée, défauts photographiés." },
 ];
 

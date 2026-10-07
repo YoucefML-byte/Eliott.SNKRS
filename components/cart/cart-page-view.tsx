@@ -28,7 +28,7 @@ export function CartPageView() {
       ) : cart.lines.length === 0 ? (
         <div className="mt-10 rounded-md border border-line px-6 py-16 text-center">
           <p className="font-display text-2xl uppercase">Ton panier est vide</p>
-          <p className="mt-3 text-muted">Choisis une paire dans le stock pour commencer.</p>
+          <p className="mt-3 text-muted">Choisis une pièce dans le stock pour commencer.</p>
           <Link href="/catalogue" className={buttonVariants({ className: "mt-8" })}>
             Voir le stock
           </Link>
@@ -46,7 +46,7 @@ export function CartPageView() {
             <dl className="mt-5 grid gap-3 text-sm">
               <div className="flex justify-between">
                 <dt className="text-muted">
-                  Sous-total ({cart.count} paire{cart.count > 1 ? "s" : ""})
+                  Sous-total ({cart.count} article{cart.count > 1 ? "s" : ""})
                 </dt>
                 <dd className="font-mono tabular-nums">{formatPrice(cart.subtotal)}</dd>
               </div>

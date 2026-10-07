@@ -136,7 +136,7 @@ function LiveConfirmation({ id }: { id: string }) {
           : "Paiement non finalisé";
     const text =
       order.status === "cancelled"
-        ? "Le délai de 30 minutes pour payer est dépassé et les paires ont été remises en vente. Aucun montant n'a été débité."
+        ? "Le délai de 30 minutes pour payer est dépassé et les articles ont été remis en vente. Aucun montant n'a été débité."
         : notice === "declined"
           ? "Le paiement a été refusé. Aucun montant n'a été débité : tu peux réessayer avec un autre moyen de paiement."
           : "Nous n'avons pas encore reçu la confirmation du paiement. Si tu n'as pas validé le paiement, tu peux reprendre ta commande.";
@@ -202,7 +202,7 @@ function ThankYou(o: {
           Merci {o.firstName} !
         </h1>
         <p className="mt-6 max-w-md leading-relaxed text-muted">
-          Ta commande est confirmée et payée. Eliott vérifie chaque paire avant l&apos;envoi ; tu recevras le numéro de
+          Ta commande est confirmée et payée. Eliott vérifie chaque pièce avant l&apos;envoi ; tu recevras le numéro de
           suivi par e-mail à <span className="text-ink">{o.email}</span>.
         </p>
 

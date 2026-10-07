@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { BrandWatermarks } from "@/components/brand/brand-watermarks";
 import { ProductImage } from "@/components/product/product-image";
 import SneakerArt from "@/components/product/sneaker-art";
 import { COLLABS } from "@/data/site";
@@ -13,8 +14,15 @@ import { SectionHeading } from "./section-heading";
 export function Collabs() {
   const { products } = useCatalog();
   return (
-    <section id="collabs" className="scroll-mt-20 border-y border-line bg-surface">
-      <div className="mx-auto max-w-[1360px] px-4 py-20 md:px-8 md:py-28">
+    <section id="collabs" className="relative scroll-mt-20 border-y border-line bg-surface">
+      {/* Travis Scott, Off-White, Corteiz, NOCTA : toutes des collabs Nike */}
+      <BrandWatermarks
+        marks={[
+          { mark: "nike", className: "-right-[30vw] -top-[2%] w-[110vw] -rotate-[8deg] opacity-[0.05] md:-right-[5vw] md:-top-[210px] md:w-[46vw]" },
+          { mark: "off-white", className: "-bottom-[190px] right-[9vw] hidden w-[15vw] -rotate-[4deg] opacity-[0.05] md:block" },
+        ]}
+      />
+      <div className="relative mx-auto max-w-[1360px] px-4 py-20 md:px-8 md:py-28">
         <SectionHeading eyebrow="Collaborations" title={<>Les collabs<br className="md:hidden" /> du moment</>} />
         <div className="grid grid-cols-2 gap-3 md:gap-5 lg:grid-cols-4">
           {COLLABS.map((c) => {

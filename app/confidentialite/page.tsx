@@ -117,7 +117,7 @@ export default function Page() {
         <p>Seules les informations strictement nécessaires au fonctionnement du site sont enregistrées dans votre navigateur :</p>
         <ul>
           <li>
-            <strong>Votre panier</strong> (paires et pointures choisies), pour le retrouver d&apos;une page à
+            <strong>Votre panier</strong> (articles et tailles choisis), pour le retrouver d&apos;une page à
             l&apos;autre.
           </li>
           <li>
@@ -125,7 +125,7 @@ export default function Page() {
           </li>
           <li>
             <strong>La commande en cours de paiement</strong> (son identifiant et les coordonnées saisies, effacées à
-            la fermeture de l&apos;onglet), pour libérer les paires réservées et vous éviter de tout ressaisir si vous
+            la fermeture de l&apos;onglet), pour libérer les articles réservés et vous éviter de tout ressaisir si vous
             revenez depuis Stripe ou PayPal.
           </li>
           <li>

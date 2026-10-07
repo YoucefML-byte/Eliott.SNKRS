@@ -10,8 +10,8 @@ const plexSans = IBM_Plex_Sans({ variable: "--font-plex-sans", subsets: ["latin"
 const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"], weight: ["400", "500", "600"] });
 
 export const metadata: Metadata = {
-  title: { default: "Eliott SNKRS — Sneakers neuves et occasion", template: "%s · Eliott SNKRS" },
-  description: "Jordan, Nike, Prada, Margiela et collabs : des paires authentifiées, notées et expédiées sous 48 h.",
+  title: { default: "Eliott SNKRS — Sneakers, maroquinerie et accessoires", template: "%s · Eliott SNKRS" },
+  description: "Sneakers, maroquinerie et accessoires, neufs et d'occasion : Jordan, Nike, Prada, Louis Vuitton et collabs, des pièces authentifiées, notées et expédiées sous 48 h.",
 };
 
 export const viewport: Viewport = { themeColor: "#ffffff" };
