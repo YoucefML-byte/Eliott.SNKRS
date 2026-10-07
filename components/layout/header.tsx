@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, Plus, Search, ShieldCheck, ShoppingBag } from "lucide-react";
+import { LogOut, Menu, Plus, Search, ShieldCheck, ShoppingBag } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -17,7 +17,7 @@ import { SearchOverlay } from "./search-overlay";
 
 export function Header() {
   const cart = useCart();
-  const { admin, setFormOpen, products } = useCatalog();
+  const { admin, setFormOpen, signOut, products } = useCatalog();
   const menus = navMenus(products);
   const pathname = usePathname();
   const [menu, setMenu] = useState(false);
@@ -26,7 +26,13 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-line bg-ground/90 backdrop-blur-md">
-        <div className="mx-auto grid h-16 max-w-[1360px] grid-cols-[1fr_auto_1fr] items-center px-2 md:px-8 lg:grid-cols-[auto_1fr_auto]">
+        <div
+          className={cn(
+            "mx-auto grid h-16 max-w-[1360px] items-center px-2 md:px-8 lg:grid-cols-[auto_1fr_auto]",
+            // en mode admin, une icône de plus : le logo se décale un peu sur téléphone
+            admin ? "grid-cols-[auto_1fr_auto]" : "grid-cols-[1fr_auto_1fr]",
+          )}
+        >
           {/* left: menu (mobile) / logo (desktop) */}
           <div className="flex items-center">
             <button
@@ -42,10 +48,10 @@ export function Header() {
           </div>
 
           {/* centre: logo (mobile) / nav (desktop) */}
-          <Link href="/" aria-label="Eliott SNKRS — accueil" className="lg:hidden">
+          <Link href="/" aria-label="Eliott SNKRS — accueil" className="justify-self-center lg:hidden">
             <span className="flex items-center gap-2">
               <LogoMark className="size-7" />
-              <span className="font-display text-xl font-semibold">
+              <span className={cn("font-display text-xl font-semibold", admin && "max-[370px]:hidden")}>
                 eliott<span className="text-acc-ink">.</span>snkrs
               </span>
             </span>
@@ -100,7 +106,7 @@ export function Header() {
           </nav>
 
           {/* right: search + cart */}
-          <div className="flex items-center justify-end gap-1">
+          <div className={cn("flex items-center justify-end", admin ? "gap-0 sm:gap-1" : "gap-1")}>
             {admin && (
               <>
                 <button
@@ -113,7 +119,7 @@ export function Header() {
                 <button
                   onClick={() => setFormOpen(true)}
                   aria-label="Ajouter un article"
-                  className="grid size-11 place-items-center rounded-md text-acc-ink hover:bg-raised sm:hidden"
+                  className="grid size-10 place-items-center rounded-md text-acc-ink hover:bg-raised sm:hidden"
                 >
                   <Plus className="size-5" />
                 </button>
@@ -125,19 +131,27 @@ export function Header() {
                 >
                   <ShieldCheck className="size-5" />
                 </Link>
+                <button
+                  onClick={signOut}
+                  aria-label="Se déconnecter"
+                  title="Se déconnecter"
+                  className="grid size-10 place-items-center rounded-md hover:bg-raised sm:size-11"
+                >
+                  <LogOut className="size-5" />
+                </button>
               </>
             )}
             <button
               onClick={() => setSearch(true)}
               aria-label="Rechercher"
-              className="grid size-11 place-items-center rounded-md hover:bg-raised"
+              className={cn("grid place-items-center rounded-md hover:bg-raised", admin ? "size-10 sm:size-11" : "size-11")}
             >
               <Search className="size-5" />
             </button>
             <button
               onClick={() => cart.setOpen(true)}
               aria-label={`Panier, ${cart.count} article${cart.count > 1 ? "s" : ""}`}
-              className="relative grid size-11 place-items-center rounded-md hover:bg-raised"
+              className={cn("relative grid place-items-center rounded-md hover:bg-raised", admin ? "size-10 sm:size-11" : "size-11")}
             >
               <ShoppingBag className="size-5" />
               <AnimatePresence>

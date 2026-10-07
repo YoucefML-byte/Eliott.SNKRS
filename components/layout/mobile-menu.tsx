@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { LogOut, Plus, ShieldCheck, X } from "lucide-react";
 import Link from "next/link";
 
 import { InstagramIcon } from "@/components/brand/instagram-icon";
@@ -12,7 +12,8 @@ import { useCatalog } from "@/lib/catalog/provider";
 import { navMenus } from "./nav-menus";
 
 export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const menus = navMenus(useCatalog().products);
+  const { products, admin, setFormOpen, signOut } = useCatalog();
+  const menus = navMenus(products);
   return (
     <Sheet open={open} onClose={onClose} side="left" label="Menu" className="max-w-none sm:max-w-[420px]">
       <div className="flex items-center justify-between border-b border-line px-4 py-3">
@@ -55,6 +56,35 @@ export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => vo
           ))}
         </ul>
       </nav>
+
+      {admin && (
+        <div className="grid gap-2 border-t border-line px-4 py-4">
+          <p className="label text-acc-ink">Mode admin · {admin.email}</p>
+          <div className="grid grid-cols-3 gap-2 text-sm">
+            <button
+              onClick={() => {
+                onClose();
+                setFormOpen(true);
+              }}
+              className="flex flex-col items-center gap-1 rounded-md bg-acc px-2 py-3 text-on-acc"
+            >
+              <Plus className="size-5" /> Ajouter
+            </button>
+            <Link href="/admin" onClick={onClose} className="flex flex-col items-center gap-1 rounded-md border border-line px-2 py-3">
+              <ShieldCheck className="size-5" /> Espace admin
+            </Link>
+            <button
+              onClick={() => {
+                onClose();
+                signOut();
+              }}
+              className="flex flex-col items-center gap-1 rounded-md border border-line px-2 py-3"
+            >
+              <LogOut className="size-5" /> Déconnexion
+            </button>
+          </div>
+        </div>
+      )}
 
       <ul className="flex flex-wrap gap-x-5 gap-y-1 border-t border-line px-4 pt-4 text-xs text-muted">
         <li>
