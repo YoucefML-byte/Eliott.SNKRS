@@ -82,6 +82,24 @@ export const EMPTY_FILTERS: Filters = {
   sort: "nouveautes",
 };
 
+// Sizes use a decimal comma (« 40,5 ») but the URL list is comma-separated,
+// so the URL carries them with a dot: ?taille=40.5,42
+const sizeToUrl = (size: string) => size.replace(",", ".");
+
+function sizesFromUrl(raw: string | null): string[] {
+  const parts = raw?.split(",").filter(Boolean) ?? [];
+  const sizes: string[] = [];
+  for (const part of parts) {
+    // old links wrote « 40,5 » as is: re-join the « 5 » to its whole size
+    if (/^\d$/.test(part) && sizes.length && !sizes[sizes.length - 1].includes(",")) {
+      sizes[sizes.length - 1] += `,${part}`;
+    } else {
+      sizes.push(part.replace(".", ","));
+    }
+  }
+  return [...new Set(sizes)];
+}
+
 export function readFilters(params: URLSearchParams): Filters {
   const list = (k: string) => params.get(k)?.split(",").filter(Boolean) ?? [];
   const cond = params.get("etat");
@@ -89,7 +107,7 @@ export function readFilters(params: URLSearchParams): Filters {
   return {
     q: params.get("q") ?? "",
     brands: list("marque"),
-    sizes: list("taille"),
+    sizes: sizesFromUrl(params.get("taille")),
     condition: cond === "neuf" ? "Neuf" : cond === "occasion" ? "Occasion" : "",
     price: params.get("prix") ?? "",
     showSoldOut: params.get("epuises") === "1",
@@ -101,7 +119,7 @@ export function writeFilters(f: Filters): string {
   const p = new URLSearchParams();
   if (f.q) p.set("q", f.q);
   if (f.brands.length) p.set("marque", f.brands.join(","));
-  if (f.sizes.length) p.set("taille", f.sizes.join(","));
+  if (f.sizes.length) p.set("taille", f.sizes.map(sizeToUrl).join(","));
   if (f.condition) p.set("etat", f.condition.toLowerCase());
   if (f.price) p.set("prix", f.price);
   if (f.showSoldOut) p.set("epuises", "1");
