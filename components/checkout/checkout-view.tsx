@@ -144,6 +144,20 @@ export function CheckoutView() {
   const loading = !cart.ready || (catalog.mode === "supabase" && !catalog.ready);
   if (loading) return <div className="h-[60vh]" />;
 
+  if (catalog.admin) {
+    return (
+      <div className="mx-auto max-w-xl px-4 py-24 text-center">
+        <h1 className="font-display text-4xl uppercase">Mode admin</h1>
+        <p className="mt-4 text-muted">
+          Les commandes sont désactivées en mode admin. Quitte le mode admin pour tester un achat.
+        </p>
+        <Link href="/admin" className={buttonVariants({ className: "mt-8" })}>
+          Espace admin
+        </Link>
+      </div>
+    );
+  }
+
   if (cart.lines.length === 0 && !placing) {
     return (
       <div className="mx-auto max-w-xl px-4 py-24 text-center">

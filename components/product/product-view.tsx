@@ -115,11 +115,18 @@ export function ProductView({ product }: { product: Product }) {
             </p>
           )}
 
+          {catalog.admin && (
+            <div className="mt-6">
+              <AdminNoPurchase />
+            </div>
+          )}
           <div className="mt-6 hidden gap-3 md:grid">
-            <Button size="lg" variant={size && !sold ? "primary" : "outline"} onClick={add} disabled={!size || sold}>
-              {added && <Check className="size-4" />}
-              {cta}
-            </Button>
+            {!catalog.admin && (
+              <Button size="lg" variant={size && !sold ? "primary" : "outline"} onClick={add} disabled={!size || sold}>
+                {added && <Check className="size-4" />}
+                {cta}
+              </Button>
+            )}
             <a
               href={SITE.instagramDm}
               target="_blank"
@@ -191,7 +198,9 @@ export function ProductView({ product }: { product: Product }) {
         <ProductGrid products={related(catalog.products, product)} className="xl:grid-cols-4" />
       </section>
 
-      {/* mobile: sticky add-to-cart */}
+      {/* mobile: sticky add-to-cart (pas en mode admin) */}
+      {!catalog.admin && (
+      <>
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-ground/95 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3 backdrop-blur md:hidden">
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
@@ -210,7 +219,19 @@ export function ProductView({ product }: { product: Product }) {
         </div>
       </div>
       <div className="h-24 md:hidden" />
+      </>
+      )}
     </div>
+  );
+}
+
+/** En mode admin, on gère le stock : pas d'achat. */
+function AdminNoPurchase() {
+  return (
+    <p className="rounded-md border border-warm/50 bg-warm/10 px-4 py-3 text-sm">
+      <strong>Mode admin</strong> : l&apos;ajout au panier est désactivé. Pour tester une commande, quitte le mode
+      admin.
+    </p>
   );
 }
 

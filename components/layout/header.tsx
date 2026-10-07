@@ -148,6 +148,7 @@ export function Header() {
             >
               <Search className="size-5" />
             </button>
+            {!admin && (
             <button
               onClick={() => cart.setOpen(true)}
               aria-label={`Panier, ${cart.count} article${cart.count > 1 ? "s" : ""}`}
@@ -168,6 +169,7 @@ export function Header() {
                 )}
               </AnimatePresence>
             </button>
+            )}
           </div>
         </div>
       </header>
