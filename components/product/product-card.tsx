@@ -1,8 +1,13 @@
+"use client";
+
+import { Trash2 } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 import { brandName } from "@/data/brands";
 import { categoryOf, ONE_SIZE, subOf } from "@/data/taxonomy";
 import type { Product } from "@/data/types";
+import { useCatalog } from "@/lib/catalog/provider";
 import { formatPrice, sizeValue } from "@/lib/format";
 import { availability, inStock, productHref } from "@/lib/products";
 import { cn } from "@/lib/utils";
@@ -19,9 +24,10 @@ export function ProductCard({ product, className }: { product: Product; classNam
   const sized = categoryOf(product).sized && sizes.length > 0;
 
   return (
+    <div className={className}>
     <Link
       href={productHref(product.slug)}
-      className={cn("group block outline-offset-4", sold && "opacity-70", className)}
+      className={cn("group block outline-offset-4", sold && "opacity-70")}
     >
       <div className="relative overflow-hidden rounded-md">
         <ProductImage
@@ -55,5 +61,62 @@ export function ProductCard({ product, className }: { product: Product; classNam
         {sold ? "Vendu" : sized ? `EU ${sizes.join(" · ")}` : subOf(product).label}
       </p>
     </Link>
+    <AdminDelete product={product} />
+    </div>
+  );
+}
+
+/** En mode admin : supprimer l'article directement depuis sa carte. */
+function AdminDelete({ product }: { product: Product }) {
+  const { admin, removePair } = useCatalog();
+  const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  if (!admin) return null;
+
+  const remove = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await removePair(product);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Suppression impossible.");
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mt-3">
+      {confirm ? (
+        <div className="grid grid-cols-2 gap-1.5">
+          <button
+            type="button"
+            onClick={() => setConfirm(false)}
+            disabled={busy}
+            className="h-9 rounded-md border border-line text-xs text-muted hover:text-ink"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            onClick={remove}
+            disabled={busy}
+            className="h-9 rounded-md bg-destructive text-xs font-medium text-white hover:bg-destructive/90"
+          >
+            {busy ? "…" : "Supprimer"}
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setConfirm(true)}
+          aria-label={`Supprimer ${product.name}`}
+          className="flex h-9 w-full items-center justify-center gap-2 rounded-md border border-destructive/40 text-xs text-destructive transition-colors hover:bg-destructive/10"
+        >
+          <Trash2 className="size-3.5" /> Supprimer l&apos;article
+        </button>
+      )}
+      {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+    </div>
   );
 }

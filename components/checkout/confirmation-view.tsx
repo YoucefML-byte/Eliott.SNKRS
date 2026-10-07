@@ -18,6 +18,10 @@ import { forgetPendingOrder } from "./pending-order";
 
 export function ConfirmationView() {
   const id = useSearchParams().get("commande");
+  // on arrive du bas de la page de commande : afficher le « Merci » en haut
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, []);
   return PAYMENTS_LIVE && id ? <LiveConfirmation id={id} /> : <DemoConfirmation />;
 }
 
