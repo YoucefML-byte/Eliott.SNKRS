@@ -99,7 +99,7 @@ export function ShopView(props: ShopViewProps) {
     (state.sel[f.key] ?? []).map((v) => ({
       key: f.key,
       value: v,
-      label: f.key === "size" ? `Pointure ${v}` : optionLabel(f.key, v, scope),
+      label: f.key === "size" ? `Pointure ${optionLabel(f.key, v, scope)}` : optionLabel(f.key, v, scope),
     })),
   );
 
@@ -182,7 +182,7 @@ export function ShopView(props: ShopViewProps) {
             <div className="hidden border-y border-line py-3 md:block">
               <div className="flex flex-wrap items-center gap-2">
                 {main.map((f) => (
-                  <FilterDropdown key={f.key} label={filterLabel(f.key, scope)} count={state.sel[f.key]?.length ?? 0} wide={f.key === "size"}>
+                  <FilterDropdown key={f.key} label={filterLabel(f.key, scope)} count={state.sel[f.key]?.length ?? 0}>
                     <FilterOptions fkey={f.key} options={f.options} selected={state.sel[f.key] ?? []} onToggle={(v) => toggle(f.key, v)} />
                   </FilterDropdown>
                 ))}
@@ -205,7 +205,7 @@ export function ShopView(props: ShopViewProps) {
                 <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-dashed border-line pt-3">
                   <span className="label mr-2 text-dim">Filtres avancés</span>
                   {more.map((f) => (
-                    <FilterDropdown key={f.key} label={filterLabel(f.key, scope)} count={state.sel[f.key]?.length ?? 0} wide={f.key === "size"}>
+                    <FilterDropdown key={f.key} label={filterLabel(f.key, scope)} count={state.sel[f.key]?.length ?? 0}>
                       <FilterOptions fkey={f.key} options={f.options} selected={state.sel[f.key] ?? []} onToggle={(v) => toggle(f.key, v)} />
                     </FilterDropdown>
                   ))}

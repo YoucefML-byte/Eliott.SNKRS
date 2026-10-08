@@ -7,7 +7,7 @@ import { COLORS, type FilterKey } from "@/data/taxonomy";
 import type { FacetOption } from "@/lib/shop";
 import { cn } from "@/lib/utils";
 
-/** Les choix d'un filtre : cases à cocher, grille de pointures ou pastilles de couleur. */
+/** Les choix d'un filtre : cases à cocher (avec pastille pour les couleurs). */
 export function FilterOptions({
   fkey,
   options,
@@ -19,31 +19,6 @@ export function FilterOptions({
   selected: string[];
   onToggle: (value: string) => void;
 }) {
-  if (fkey === "size") {
-    return (
-      <div className="grid grid-cols-5 gap-1.5">
-        {options.map((o) => {
-          const on = selected.includes(o.value);
-          return (
-            <button
-              key={o.value}
-              type="button"
-              aria-pressed={on}
-              disabled={!on && o.count === 0}
-              onClick={() => onToggle(o.value)}
-              className={cn(
-                "h-10 rounded-md border font-mono text-[13px] tabular-nums transition-colors disabled:cursor-not-allowed disabled:opacity-35",
-                on ? "border-acc bg-acc text-on-acc" : "border-line text-muted hover:border-ink hover:text-ink",
-              )}
-            >
-              {o.label}
-            </button>
-          );
-        })}
-      </div>
-    );
-  }
-
   return (
     <ul className="grid gap-0.5">
       {options.map((o) => {
@@ -92,12 +67,10 @@ export function FilterOptions({
 export function FilterDropdown({
   label,
   count,
-  wide,
   children,
 }: {
   label: string;
   count: number;
-  wide?: boolean;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -137,12 +110,7 @@ export function FilterDropdown({
         <ChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
       </button>
       {open && (
-        <div
-          className={cn(
-            "absolute left-0 top-full z-40 mt-2 max-h-[60vh] overflow-y-auto rounded-md border border-line bg-ground p-3 shadow-xl shadow-black/10",
-            wide ? "w-80" : "w-64",
-          )}
-        >
+        <div className="absolute left-0 top-full z-40 mt-2 max-h-[60vh] w-64 overflow-y-auto rounded-md border border-line bg-surface p-3 shadow-xl shadow-black/10">
           {children}
         </div>
       )}

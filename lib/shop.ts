@@ -8,7 +8,6 @@ import {
   categoryOf,
   COLORS,
   ONE_SIZE,
-  SHOE_SIZES,
   subOf,
   type CategoryId,
   type FilterKey,
@@ -55,6 +54,19 @@ interface FilterDef {
 }
 
 const priceRange = (price: number) => PRICE_RANGES.find((r) => price >= r.min && price < r.max)?.id;
+
+/** tranches du filtre Pointure (EU, demi-pointures comprises) */
+export const SIZE_RANGES = [
+  { id: "35-38", label: "35 à 37,5", min: 0, max: 38 },
+  { id: "38-40", label: "38 à 39,5", min: 38, max: 40 },
+  { id: "40-42", label: "40 à 41,5", min: 40, max: 42 },
+  { id: "42-44", label: "42 à 43,5", min: 42, max: 44 },
+  { id: "44-plus", label: "44 et plus", min: 44, max: Infinity },
+];
+const sizeRange = (size: string) => {
+  const v = sizeValue(size);
+  return SIZE_RANGES.find((r) => v >= r.min && v < r.max)?.id;
+};
 const indexIn = (list: string[]) => (v: string) => {
   const i = list.indexOf(v);
   return i < 0 ? list.length : i;
@@ -79,9 +91,10 @@ export const FILTERS: Record<FilterKey, FilterDef> = {
   size: {
     label: "Pointure",
     param: "taille",
-    option: (o) => (o.size === ONE_SIZE ? undefined : o.size),
-    optionLabel: (v) => v,
-    order: sizeValue,
+    // par tranche : « 40 à 41,5 »
+    option: (o) => (o.size === ONE_SIZE ? undefined : sizeRange(o.size)),
+    optionLabel: (v) => SIZE_RANGES.find((r) => r.id === v)?.label ?? v,
+    order: indexIn(SIZE_RANGES.map((r) => r.id)),
   },
   color: { label: "Couleur", param: "couleur", values: (p) => [p.color], order: indexIn(COLORS.map((c) => c.id)) },
   price: {
@@ -131,26 +144,25 @@ export const optionLabel = (key: FilterKey, v: string, scope: Scope) => FILTERS[
 
 // --- adresse de la page ------------------------------------------------------
 
-// Les pointures ont une virgule décimale (« 40,5 ») mais la liste de l'adresse
-// est séparée par des virgules : l'adresse porte donc « 40.5 ».
-function sizesFromUrl(parts: string[]) {
+// Le filtre Pointure porte des tranches (« 40-42 »). Les anciens liens portent
+// des pointures (« 40.5 », ou « 40,5 » coupé en « 40 » et « 5 » par la liste) :
+// elles sont ramenées à leur tranche.
+function sizeRangesFromUrl(parts: string[]) {
+  const ranges: string[] = [];
   const sizes: string[] = [];
   for (const part of parts) {
-    // anciens liens « 40,5 » écrits tels quels : on recolle le « 5 »
-    if (/^\d$/.test(part) && sizes.length && !sizes[sizes.length - 1].includes(",")) {
-      sizes[sizes.length - 1] += `,${part}`;
-    } else {
-      sizes.push(part.replace(".", ","));
-    }
+    if (SIZE_RANGES.some((r) => r.id === part)) ranges.push(part);
+    else if (/^\d$/.test(part) && sizes.length && !sizes[sizes.length - 1].includes(",")) sizes[sizes.length - 1] += `,${part}`;
+    else sizes.push(part.replace(".", ","));
   }
-  return sizes;
+  return [...ranges, ...sizes.map(sizeRange).filter((r): r is string => Boolean(r))];
 }
 
 export function readState(params: URLSearchParams): ShopState {
   const sel: Selection = {};
   for (const key of KEYS) {
     const parts = params.get(FILTERS[key].param)?.split(",").filter(Boolean) ?? [];
-    const values = key === "size" ? sizesFromUrl(parts) : parts;
+    const values = key === "size" ? sizeRangesFromUrl(parts) : parts;
     if (values.length) sel[key] = [...new Set(values)];
   }
   // anciens liens : ?epuises=1 affichait aussi les articles vendus
@@ -168,7 +180,7 @@ export function writeState(s: ShopState): string {
   if (s.q) p.set("q", s.q);
   for (const key of KEYS) {
     const values = s.sel[key];
-    if (values?.length) p.set(FILTERS[key].param, values.map((v) => (key === "size" ? v.replace(",", ".") : v)).join(","));
+    if (values?.length) p.set(FILTERS[key].param, values.join(","));
   }
   if (s.sort !== "nouveautes") p.set("tri", s.sort);
   return p.toString();
@@ -252,8 +264,8 @@ export function facet(products: Product[], scope: Scope, s: ShopState, key: Filt
     const valuesOf = (opts: SizeOption[]) =>
       def.option ? opts.map((o) => def.option!(o, p)) : (def.values?.(p) ?? []);
     for (const v of valuesOf(p.sizes)) if (v !== undefined) all.add(v);
-    // toutes les pointures sont proposées, même celles absentes du stock
-    if (key === "size" && categoryOf(p).sized) for (const s of SHOE_SIZES) all.add(s);
+    // toutes les tranches de pointures sont proposées, même celles absentes du stock
+    if (key === "size" && categoryOf(p).sized) for (const r of SIZE_RANGES) all.add(r.id);
     if (s.q && !matchesQuery(p, s.q)) continue;
     if (!matchesProductFilters(p, s.sel, key)) continue;
     const opts = matchingOptions(p, s.sel, key);
