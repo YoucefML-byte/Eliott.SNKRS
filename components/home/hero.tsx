@@ -47,6 +47,8 @@ export function HomeHero() {
   return (
     // 100svh de défilement de plus que l'écran : le temps d'un tour
     <section ref={track} className="relative h-[calc(200svh-4rem)] border-b border-line bg-ground">
+      {/* titre de la page pour les moteurs de recherche et les lecteurs d'écran */}
+      <h1 className="sr-only">Eliott SNKRS — sneakers, maroquinerie et accessoires authentifiés</h1>
       <div className="sticky top-16 grid h-[calc(100svh-4rem)] place-items-center overflow-hidden px-4">
         {/* halo vert derrière le logo */}
         <div
