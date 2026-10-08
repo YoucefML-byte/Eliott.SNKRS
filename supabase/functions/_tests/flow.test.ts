@@ -222,6 +222,41 @@ Deno.test({
         assertMatch(body.message, /vendue/);
       });
 
+      await t.step("même pointure dans deux états : chaque ligne de stock a sa réservation", async () => {
+        const GUTTA = "corteiz-air-max-95-gutta-green";
+        await env.pgrest.query(
+          `update products set sizes = '[{"size":"44","condition":"Neuf","stock":1},` +
+            `{"size":"44","condition":"Occasion","grade":6,"stock":2}]'::jsonb where slug = $1`,
+          [GUTTA],
+        );
+        const line = async (cond: string) =>
+          (await env.pgrest.query(
+            `select (e->>'stock')::int s from products, jsonb_array_elements(sizes) e
+              where slug = $1 and e->>'size' = '44' and condition_code(e) = $2`,
+            [GUTTA, cond],
+          )).rows[0]?.s;
+
+        const { res, body } = await checkout([{ slug: GUTTA, size: "44", condition: "occasion-6", qty: 1 }], "stripe");
+        assertEquals(res.status, 200);
+        assertEquals([await line("neuf"), await line("occasion-6")], [1, 1], "seule la paire en 6/10 est réservée");
+        const session = [...fakes.sessions.values()].at(-1) as { params: Record<string, string> };
+        assertMatch(session.params["line_items[0][price_data][product_data][name]"], /EU 44 · Occasion 6\/10$/);
+        assertEquals((await confirm(body.order.id)).order.items[0].condition, "occasion-6");
+        assertEquals((await confirm(body.order.id, "cancel")).order.status, "cancelled");
+        assertEquals(await line("occasion-6"), 2, "remise en stock dans le bon état");
+
+        // ancien panier sans état : la première ligne de la pointure
+        const old = await checkout([{ slug: GUTTA, size: "44", qty: 1 }], "stripe");
+        assertEquals(old.res.status, 200);
+        assertEquals([await line("neuf"), await line("occasion-6")], [0, 2]);
+        assertEquals((await confirm(old.body.order.id)).order.items[0].condition, "neuf");
+
+        // état absent de la fiche → refusé, rien de réservé
+        const ghost = await checkout([{ slug: GUTTA, size: "44", condition: "occasion-9", qty: 1 }], "stripe");
+        assertEquals(ghost.body.error, "unknown_size");
+        assertEquals(await line("occasion-6"), 2);
+      });
+
       await t.step("Stripe en panne → réservation annulée aussitôt", async () => {
         const before = await stock(ASICS, "43");
         fakes.stripeDown = true;

@@ -2,7 +2,7 @@ import { assert, assertEquals, assertThrows } from "@std/assert";
 
 import type { OrderRow } from "../_shared/db.ts";
 import { allowedOrigins, corsHeaders, HttpError } from "../_shared/http.ts";
-import { parseCheckout } from "../_shared/orders.ts";
+import { lineLabel, parseCheckout } from "../_shared/orders.ts";
 import { paypalOrderBody } from "../_shared/paypal.ts";
 import { checkoutSessionParams, stripeSignature, verifyStripeSignature } from "../_shared/stripe.ts";
 
@@ -108,12 +108,17 @@ Deno.test("validation de la demande de paiement", () => {
     provider: "paypal",
   };
   assertEquals(parseCheckout(ok).customer.email, "c@ex.fr");
+  assertEquals(
+    parseCheckout({ ...ok, items: [{ slug: "a", size: "42", condition: "occasion-6", qty: 1 }] }).items[0].condition,
+    "occasion-6",
+  );
   for (
     const bad of [
       null,
       { ...ok, items: [] },
       { ...ok, items: [{ slug: "a", size: "42", qty: 9 }] },
       { ...ok, items: [{ slug: "a", size: "42", qty: 1.5 }] },
+      { ...ok, items: [{ slug: "a", size: "42", condition: "comme neuf", qty: 1 }] },
       { ...ok, customer: { ...ok.customer, city: "" } },
       { ...ok, customer: { ...ok.customer, email: "x" } },
       { ...ok, shipping: "drone" },
@@ -133,4 +138,14 @@ Deno.test("CORS : seul le site est autorisé", () => {
     "https://youcefml-byte.github.io",
   );
   assertEquals(corsHeaders(req("https://pirate.example"), origins), {});
+});
+
+Deno.test("libellé des lignes : pointure et état", () => {
+  assertEquals(lineLabel({ name: "Dunk Low", size: "42" }), "Dunk Low — EU 42");
+  assertEquals(lineLabel({ name: "Dunk Low", size: "42", condition: "neuf" }), "Dunk Low — EU 42 · Neuf");
+  assertEquals(
+    lineLabel({ name: "Dunk Low", size: "42", condition: "occasion-6" }),
+    "Dunk Low — EU 42 · Occasion 6/10",
+  );
+  assertEquals(lineLabel({ name: "Speedy 25", size: "TU" }), "Speedy 25 — Taille unique");
 });

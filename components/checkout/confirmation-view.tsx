@@ -11,7 +11,7 @@ import { sizeText } from "@/data/taxonomy";
 import { useCart } from "@/lib/cart";
 import { useCatalog } from "@/lib/catalog/provider";
 import { confirmOrder, PAYMENTS_LIVE, PaymentError, type PublicOrder } from "@/lib/payment";
-import { findProduct } from "@/lib/products";
+import { conditionCodeLabel, findProduct } from "@/lib/products";
 
 import { cartSummaryLines, OrderSummary, type SummaryLine } from "./order-summary";
 import { forgetPendingOrder } from "./pending-order";
@@ -156,9 +156,9 @@ function LiveConfirmation({ id }: { id: string }) {
   }
 
   const lines: SummaryLine[] = order.items.map((i) => ({
-    key: i.slug + i.size,
+    key: `${i.slug}|${i.size}|${i.condition ?? ""}`,
     name: i.name,
-    detail: [i.colorway, sizeText(i.size)].filter(Boolean).join(" · "),
+    detail: [i.colorway, sizeText(i.size), i.condition && conditionCodeLabel(i.condition)].filter(Boolean).join(" · "),
     qty: i.qty,
     total: i.price * i.qty,
     product: findProduct(products, i.slug),

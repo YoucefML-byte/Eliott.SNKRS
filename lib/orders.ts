@@ -7,6 +7,7 @@ import { SHIPPING } from "@/data/site";
 import type { Order } from "./cart";
 import { catalogBackend } from "./catalog";
 import { supabase } from "./catalog/supabase";
+import { conditionCode } from "./products";
 
 export type OrderStatus = "pending" | "paid" | "shipped" | "cancelled";
 
@@ -16,7 +17,8 @@ export interface AdminOrder {
   status: OrderStatus;
   provider: string;
   createdAt: string;
-  items: { slug: string; name: string; size: string; qty: number; price: number }[];
+  /** condition : « neuf », « occasion-6 »… (absente des commandes passées avant les états par pointure) */
+  items: { slug: string; name: string; size: string; condition?: string; qty: number; price: number }[];
   subtotal: number;
   shippingLabel: string;
   shippingPrice: number;
@@ -52,7 +54,14 @@ export function recordDemoOrder(o: Order) {
       status: "paid",
       provider: o.payment ?? "Carte",
       createdAt: new Date().toISOString(),
-      items: o.lines.map((l) => ({ slug: l.slug, name: l.product.name, size: l.size, qty: l.qty, price: l.product.price })),
+      items: o.lines.map((l) => ({
+        slug: l.slug,
+        name: l.product.name,
+        size: l.size,
+        condition: conditionCode(l.option),
+        qty: l.qty,
+        price: l.product.price,
+      })),
       subtotal: o.subtotal,
       shippingLabel: o.shipping.label,
       shippingPrice: o.shipping.price,

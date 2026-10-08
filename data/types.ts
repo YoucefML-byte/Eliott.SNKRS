@@ -28,6 +28,10 @@ export interface ProductImage {
   label?: string;
 }
 
+/**
+ * A stock line: a size in one condition. The same size can appear twice in
+ * different conditions (42 new and 42 used 6/10).
+ */
 export interface SizeOption {
   /** EU size, e.g. "42,5" — or "TU" (taille unique) for watches, bags… */
   size: string;

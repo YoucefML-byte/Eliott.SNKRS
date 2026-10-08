@@ -11,6 +11,7 @@ import { useCart } from "@/lib/cart";
 import { useCatalog } from "@/lib/catalog/provider";
 import { formatPrice } from "@/lib/format";
 import { cancelOrder, PAYMENTS_LIVE, PaymentError, startCheckout, type Provider } from "@/lib/payment";
+import { conditionCode } from "@/lib/products";
 import { cn } from "@/lib/utils";
 
 import { Field } from "./field";
@@ -128,7 +129,7 @@ export function CheckoutView() {
       const previous = pendingOrder();
       if (previous) await cancelOrder(previous).catch(() => {});
       const { order, url } = await startCheckout({
-        items: cart.lines.map(({ slug, size, qty }) => ({ slug, size, qty })),
+        items: cart.lines.map((l) => ({ slug: l.slug, size: l.size, condition: conditionCode(l.option), qty: l.qty })),
         customer,
         shipping: shippingId,
         provider: payment,

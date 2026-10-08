@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { sizeText } from "@/data/taxonomy";
 import { formatPrice } from "@/lib/format";
+import { conditionCodeLabel } from "@/lib/products";
 import { listOrders, markShipped, type AdminOrder } from "@/lib/orders";
 import { cn } from "@/lib/utils";
 
@@ -88,9 +89,10 @@ function OrderCard({ order: o, onChange }: { order: AdminOrder; onChange: (id: s
 
       <ul className="mt-3 grid gap-1 text-sm">
         {o.items.map((i) => (
-          <li key={i.slug + i.size}>
+          <li key={`${i.slug}|${i.size}|${i.condition ?? ""}`}>
             {i.qty > 1 && `${i.qty} × `}
             {i.name} · <span className="font-mono">{sizeText(i.size)}</span>
+            {i.condition && <span className="text-muted"> · {conditionCodeLabel(i.condition)}</span>}
           </li>
         ))}
       </ul>

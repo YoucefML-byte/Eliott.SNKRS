@@ -12,7 +12,7 @@ import { DEMO_ADMIN } from "@/lib/catalog/demo";
 import { useCatalog } from "@/lib/catalog/provider";
 import { categoryOf, sizeText } from "@/data/taxonomy";
 import { formatPrice } from "@/lib/format";
-import { inStock, productHref } from "@/lib/products";
+import { inStock, productHref, sizeLabel } from "@/lib/products";
 import { cn } from "@/lib/utils";
 
 import { OrdersPanel } from "./orders-panel";
@@ -180,8 +180,12 @@ function AdminRow({ product }: { product: Product }) {
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // « EU 38 ×2, EU 41 ×5 »
-  const sizes = inStock(product).map((s) => `${sizeText(s.size)}${s.stock > 1 ? ` ×${s.stock}` : ""}`);
+  // « EU 38 ×2, EU 41 ×5 » ; l'état est précisé quand une pointure existe en plusieurs états
+  const available = inStock(product);
+  const twice = (size: string) => available.filter((s) => s.size === size).length > 1;
+  const sizes = available.map(
+    (s) => `${sizeText(s.size)}${twice(s.size) ? ` ${sizeLabel(s)}` : ""}${s.stock > 1 ? ` ×${s.stock}` : ""}`,
+  );
 
   const remove = async () => {
     setBusy(true);

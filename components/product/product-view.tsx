@@ -14,7 +14,7 @@ import type { Product } from "@/data/types";
 import { useCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
 import { useCatalog } from "@/lib/catalog/provider";
-import { availability, inStock, related, sizeLabel } from "@/lib/products";
+import { availability, inStock, optionKey, related, sizeLabel } from "@/lib/products";
 import { cn } from "@/lib/utils";
 
 import { Price } from "./price";
@@ -26,11 +26,13 @@ export function ProductView({ product }: { product: Product }) {
   const cart = useCart();
   const catalog = useCatalog();
   const available = inStock(product);
-  // a single pair left is pre-selected
-  const [size, setSize] = useState<string | null>(available.length === 1 ? available[0].size : null);
+  // a single pair left is pre-selected; a choice is a size in one condition ("42|occasion-6")
+  const [choice, setChoice] = useState<string | null>(available.length === 1 ? optionKey(available[0]) : null);
   const [added, setAdded] = useState(false);
   const sold = availability(product) === "soldout";
-  const option = product.sizes.find((s) => s.size === size);
+  const option = product.sizes.find((s) => optionKey(s) === choice);
+  const size = option?.size ?? null;
+  const sizesInStock = new Set(available.map((s) => s.size)).size;
   const cat = categoryOf(product);
   const sub = subOf(product);
   // montres, sacs, accessoires : pas de pointure à choisir
@@ -47,8 +49,8 @@ export function ProductView({ product }: { product: Product }) {
   ].filter((s): s is [string, string] => Boolean(s[1]));
 
   const add = () => {
-    if (!size) return;
-    cart.add(product.slug, size);
+    if (!option) return;
+    cart.add(product.slug, option);
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1800);
   };
@@ -96,13 +98,15 @@ export function ProductView({ product }: { product: Product }) {
             <div className="mb-3 flex items-baseline justify-between">
               <h2 className="label text-ink">Pointure EU</h2>
               <span className="label text-muted">
-                {available.length} pointure{available.length > 1 ? "s" : ""} en stock
+                {sizesInStock} pointure{sizesInStock > 1 ? "s" : ""} en stock
               </span>
             </div>
-            <SizeSelector sizes={product.sizes} value={size} onChange={setSize} />
+            <SizeSelector sizes={product.sizes} value={choice} onChange={setChoice} />
             <p className="mt-3 min-h-5 text-sm text-muted" aria-live="polite">
               {option &&
-                `${sizeLabel(option)} · ${option.stock > 1 ? `${option.stock} paires` : "dernière paire"} dans cette pointure`}
+                `${sizeLabel(option)} · ${option.stock > 1 ? `${option.stock} paires` : "dernière paire"} ${
+                  product.sizes.filter((s) => s.size === option.size).length > 1 ? "dans cet état" : "dans cette pointure"
+                }`}
             </p>
           </div>
           ) : (
@@ -171,7 +175,7 @@ export function ProductView({ product }: { product: Product }) {
             )}
             <Details title="État">
               {product.sizes.map((s) => (
-                <span key={s.size} className="block">
+                <span key={optionKey(s)} className="block">
                   {sized ? `${sizeText(s.size)} — ` : ""}
                   {sizeLabel(s)}
                   {s.condition === "Occasion" && " · nettoyé, défauts éventuels photographiés"}
@@ -204,14 +208,18 @@ export function ProductView({ product }: { product: Product }) {
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-ground/95 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3 backdrop-blur md:hidden">
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm">{size ? sizeText(size) : "Pointure ?"}</p>
+            <p className="truncate text-sm">
+              {option
+                ? `${sizeText(option.size)} · ${option.condition === "Neuf" ? "Neuf" : `Occ. ${option.grade}/10`}`
+                : "Pointure ?"}
+            </p>
             <p className="font-mono text-sm tabular-nums text-muted">{formatPrice(product.price)}</p>
           </div>
           <Button
             variant={size && !sold ? "primary" : "outline"}
             onClick={add}
             disabled={!size || sold}
-            className="h-12 flex-[2]"
+            className="h-12 flex-[1.5]"
           >
             {added && <Check className="size-4" />}
             {cta}

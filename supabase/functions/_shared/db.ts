@@ -10,6 +10,8 @@ export interface OrderItem {
   brand: string;
   colorway: string;
   size: string;
+  /** « neuf », « occasion-6 »… (absent des commandes passées avant les états par pointure) */
+  condition?: string;
   qty: number;
   price: number;
 }

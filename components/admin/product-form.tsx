@@ -65,6 +65,13 @@ export function ProductFormSheet() {
 /** « 9/10 » → value of the condition picker of a size line */
 const conditionValue = (o: Pick<SizeOption, "condition" | "grade">) =>
   o.condition === "Neuf" ? "neuf" : `occasion-${o.grade ?? 9}`;
+const CONDITION_VALUES = ["neuf", ...GRADES.map((g) => `occasion-${g}`)];
+const fromConditionValue = (v: string): Pick<SizeOption, "condition" | "grade"> =>
+  v === "neuf" ? { condition: "Neuf", grade: undefined } : { condition: "Occasion", grade: Number(v.split("-")[1]) };
+
+/** a stock line of the form: a size, its condition, its number of pairs */
+type Line = SizeOption & { id: string };
+const withId = (o: SizeOption): Line => ({ ...o, id: crypto.randomUUID() });
 
 function ProductForm({ product, onDone }: { product: Product | null; onDone: () => void }) {
   const { addPair, updatePair, products } = useCatalog();
@@ -82,7 +89,10 @@ function ProductForm({ product, onDone }: { product: Product | null; onDone: () 
   const [condition, setCondition] = useState<Condition>(first?.condition ?? "Neuf");
   const [grade, setGrade] = useState(first?.grade ?? 9);
   // stock par pointure (chaussures) ; quantité pour une taille unique
-  const [stock, setStock] = useState<SizeOption[]>(product?.sizes.filter((s) => s.size !== ONE_SIZE) ?? []);
+  // une même pointure peut avoir plusieurs lignes, une par état
+  const [stock, setStock] = useState<Line[]>(
+    () => product?.sizes.filter((s) => s.size !== ONE_SIZE).map(withId) ?? [],
+  );
   const [oneQty, setOneQty] = useState(product?.sizes.find((s) => s.size === ONE_SIZE)?.stock ?? 1);
   const [dragging, setDragging] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -126,10 +136,24 @@ function ProductForm({ product, onDone }: { product: Product | null; onDone: () 
     setStock((list) => {
       if (list.some((o) => o.size === size)) return list.filter((o) => o.size !== size);
       const last = list.at(-1);
-      return [...list, { size, condition: last?.condition ?? "Neuf", grade: last?.grade, stock: 1 }];
+      return [...list, withId({ size, condition: last?.condition ?? "Neuf", grade: last?.grade, stock: 1 })];
     });
-  const setLine = (size: string, patch: Partial<SizeOption>) =>
-    setStock((list) => list.map((o) => (o.size === size ? { ...o, ...patch } : o)));
+  const setLine = (id: string, patch: Partial<SizeOption>) =>
+    setStock((list) => list.map((o) => (o.id === id ? { ...o, ...patch } : o)));
+  const removeLine = (id: string) => setStock((list) => list.filter((o) => o.id !== id));
+  /** états déjà pris par les autres lignes de la même pointure */
+  const takenBy = (line: Line) =>
+    new Set(stock.filter((o) => o.size === line.size && o.id !== line.id).map(conditionValue));
+  // même pointure dans un autre état (ex. un 42 neuf et un 42 en 6/10)
+  const addCondition = (line: Line) =>
+    setStock((list) => {
+      const taken = new Set(list.filter((o) => o.size === line.size).map(conditionValue));
+      const free = CONDITION_VALUES.find((v) => !taken.has(v));
+      if (!free) return list;
+      const at = list.findIndex((o) => o.id === line.id) + 1;
+      return [...list.slice(0, at), withId({ size: line.size, ...fromConditionValue(free), stock: 1 }), ...list.slice(at)];
+    });
+  const canAddCondition = (line: Line) => stock.filter((o) => o.size === line.size).length < CONDITION_VALUES.length;
   // taille unique : l'état est choisi pour l'article
   const oneSize: SizeOption = {
     size: ONE_SIZE,
@@ -170,7 +194,9 @@ function ProductForm({ product, onDone }: { product: Product | null; onDone: () 
         brand: text("brand"),
         colorway: text("colorway"),
         price,
-        sizes: cat.sized ? lines : [oneSize],
+        sizes: cat.sized
+          ? lines.map((o) => ({ size: o.size, condition: o.condition, grade: o.grade, stock: o.stock }))
+          : [oneSize],
         description: text("description"),
         photos: prepared,
       };
@@ -472,7 +498,7 @@ function ProductForm({ product, onDone }: { product: Product | null; onDone: () 
         )}
 
         {cat.sized ? (
-          <Field label="Pointures, état et stock" hint="Touche une pointure, puis choisis son état et le nombre de paires">
+          <Field label="Pointures, état et stock" hint="Touche une pointure, puis choisis son état et le nombre de paires. « + état » : la même pointure dans un autre état">
             <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-6">
               {SIZES.map((s) => (
                 <button
@@ -500,31 +526,32 @@ function ProductForm({ product, onDone }: { product: Product | null; onDone: () 
                   </div>
                   <ul className="divide-y divide-line" aria-label="Stock par pointure">
                     {lines.map((o) => (
-                      <li key={o.size} className="flex items-center gap-2 py-2 pl-3 pr-1">
+                      <li key={o.id} className="flex items-center gap-2 py-2 pl-3 pr-1">
                         <span className="w-16 shrink-0">
                           <span className={cn("block font-mono text-sm tabular-nums", o.stock === 0 && "text-dim line-through")}>
                             {o.size}
                           </span>
                           {o.stock === 0 && <span className="block text-[10px] uppercase text-dim">Épuisée</span>}
+                          {canAddCondition(o) && (
+                            <button
+                              type="button"
+                              onClick={() => addCondition(o)}
+                              aria-label={`Ajouter la pointure ${o.size} dans un autre état`}
+                              className="mt-0.5 block text-[11px] text-acc-ink hover:underline"
+                            >
+                              + état
+                            </button>
+                          )}
                         </span>
                         <select
                           aria-label={`État de la pointure ${o.size}`}
                           value={conditionValue(o)}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setLine(
-                              o.size,
-                              v === "neuf"
-                                ? { condition: "Neuf", grade: undefined }
-                                : { condition: "Occasion", grade: Number(v.split("-")[1]) },
-                            );
-                          }}
+                          onChange={(e) => setLine(o.id, fromConditionValue(e.target.value))}
                           className="h-9 min-w-0 flex-1 rounded-md border border-line bg-surface px-2 text-sm text-ink outline-none focus:border-acc"
                         >
-                          <option value="neuf">Neuf</option>
-                          {GRADES.map((g) => (
-                            <option key={g} value={`occasion-${g}`}>
-                              Occ. {g}/10
+                          {CONDITION_VALUES.map((v) => (
+                            <option key={v} value={v} disabled={takenBy(o).has(v)}>
+                              {v === "neuf" ? "Neuf" : `Occ. ${v.split("-")[1]}/10`}
                             </option>
                           ))}
                         </select>
@@ -532,13 +559,13 @@ function ProductForm({ product, onDone }: { product: Product | null; onDone: () 
                           value={o.stock}
                           min={0}
                           max={MAX_QTY}
-                          onChange={(n) => setLine(o.size, { stock: n })}
+                          onChange={(n) => setLine(o.id, { stock: n })}
                           label={`Nombre de paires en ${o.size}`}
                           maxTitle="Maximum atteint"
                         />
                         <button
                           type="button"
-                          onClick={() => toggleSize(o.size)}
+                          onClick={() => removeLine(o.id)}
                           aria-label={`Retirer la pointure ${o.size}`}
                           className="grid size-9 shrink-0 place-items-center rounded-md text-muted hover:bg-raised hover:text-ink"
                         >

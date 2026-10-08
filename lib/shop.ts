@@ -16,7 +16,15 @@ import {
 import type { Product, SizeOption } from "@/data/types";
 
 import { sizeValue } from "./format";
-import { fullName, PRICE_RANGES, SORTS, type SortKey } from "./products";
+import {
+  conditionCode,
+  conditionCodeLabel,
+  conditionRank,
+  fullName,
+  PRICE_RANGES,
+  SORTS,
+  type SortKey,
+} from "./products";
 
 export interface Scope {
   category?: CategoryId;
@@ -94,9 +102,9 @@ export const FILTERS: Record<FilterKey, FilterDef> = {
     label: "État",
     param: "etat",
     // « neuf », « occasion-9 », « occasion-8 »… (« occasion » : toutes les notes)
-    option: (o) => (o.condition === "Neuf" ? "neuf" : `occasion-${o.grade ?? 0}`),
-    optionLabel: (v) => (v === "neuf" ? "Neuf" : v === "occasion" ? "Occasion" : `Occasion ${v.split("-")[1]}/10`),
-    order: (v) => (v === "neuf" ? 0 : 100 - (Number(v.split("-")[1]) || 0)),
+    option: conditionCode,
+    optionLabel: conditionCodeLabel,
+    order: conditionRank,
   },
   collab: { label: "Collaboration", param: "collab", values: (p) => [p.collab] },
   movement: { label: "Mouvement", param: "mouvement", values: (p) => [p.attributes?.movement] },

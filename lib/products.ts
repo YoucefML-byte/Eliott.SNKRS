@@ -37,6 +37,28 @@ export function conditionLabel(p: Product) {
 export const sizeLabel = (s: SizeOption) =>
   s.condition === "Neuf" ? "Neuf" : `Occasion ${s.grade}/10`;
 
+/**
+ * État d'un exemplaire en un mot : « neuf », « occasion-9 »… Une même pointure
+ * peut exister dans plusieurs états : pointure + état identifient la ligne de
+ * stock (panier, commande, filtre État).
+ */
+export const conditionCode = (o: Pick<SizeOption, "condition" | "grade">) =>
+  o.condition === "Neuf" ? "neuf" : `occasion-${o.grade ?? 0}`;
+
+/** « Neuf », « Occasion 9/10 » (« Occasion » seul : toutes les notes) */
+export const conditionCodeLabel = (code: string) =>
+  code === "neuf" ? "Neuf" : code === "occasion" ? "Occasion" : `Occasion ${code.split("-")[1]}/10`;
+
+/** neuf d'abord, puis de la meilleure à la moins bonne note */
+export const conditionRank = (code: string) => (code === "neuf" ? 0 : 100 - (Number(code.split("-")[1]) || 0));
+
+/** clé d'une ligne de stock : « 42|neuf », « 42|occasion-6 » */
+export const optionKey = (o: SizeOption) => `${o.size}|${conditionCode(o)}`;
+
+/** la ligne de stock d'une pointure dans un état (sans état, anciens paniers : la première de la pointure) */
+export const findOption = (p: Product, size: string, condition?: string) =>
+  p.sizes.find((o) => o.size === size && (!condition || conditionCode(o) === condition));
+
 export const fullName = (p: Product) => `${brandName(p.brand)} ${p.name}`;
 
 export const isNew = (p: Product, now = new Date()) =>

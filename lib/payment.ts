@@ -29,7 +29,7 @@ export interface PublicOrder {
   number: string;
   status: "pending" | "paid" | "shipped" | "cancelled";
   provider: Provider;
-  items: { slug: string; name: string; colorway: string; size: string; qty: number; price: number }[];
+  items: { slug: string; name: string; colorway: string; size: string; condition?: string; qty: number; price: number }[];
   subtotal: number;
   shippingMethod: ShippingId;
   shippingPrice: number;
@@ -66,7 +66,8 @@ async function call<T>(fn: string, body: unknown): Promise<T> {
 
 /** Crée la commande et renvoie l'adresse de la page de paiement Stripe ou PayPal. */
 export const startCheckout = (input: {
-  items: { slug: string; size: string; qty: number }[];
+  /** condition : état de la ligne de stock (« neuf », « occasion-6 ») */
+  items: { slug: string; size: string; condition: string; qty: number }[];
   customer: CheckoutCustomer;
   shipping: ShippingId;
   provider: Provider;

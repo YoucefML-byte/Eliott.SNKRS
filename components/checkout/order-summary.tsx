@@ -3,6 +3,7 @@ import { sizeText } from "@/data/taxonomy";
 import type { Product } from "@/data/types";
 import type { ResolvedLine } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
+import { sizeLabel } from "@/lib/products";
 
 export interface SummaryLine {
   key: string;
@@ -16,9 +17,9 @@ export interface SummaryLine {
 
 export const cartSummaryLines = (lines: ResolvedLine[]): SummaryLine[] =>
   lines.map((l) => ({
-    key: l.slug + l.size,
+    key: `${l.slug}|${l.size}|${l.condition ?? ""}`,
     name: l.product.name,
-    detail: [l.product.colorway, sizeText(l.size)].filter(Boolean).join(" · "),
+    detail: [l.product.colorway, sizeText(l.size), sizeLabel(l.option)].filter(Boolean).join(" · "),
     qty: l.qty,
     total: l.total,
     product: l.product,

@@ -17,8 +17,8 @@ import { ProductImage } from "./product-image";
 
 export function ProductCard({ product, className }: { product: Product; className?: string }) {
   const sold = availability(product) === "soldout";
-  const sizes = inStock(product)
-    .map((s) => s.size)
+  // une pointure en stock dans deux états n'est listée qu'une fois
+  const sizes = [...new Set(inStock(product).map((s) => s.size))]
     .filter((s) => s !== ONE_SIZE)
     .sort((a, b) => sizeValue(a) - sizeValue(b));
   const sized = categoryOf(product).sized && sizes.length > 0;

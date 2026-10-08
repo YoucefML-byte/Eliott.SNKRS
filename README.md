@@ -61,8 +61,9 @@ Next.js (App Router), React, TypeScript, Tailwind CSS v4, structure shadcn/ui
   mouvement, boîtier, bracelet, matière (montres) ; taille et matière
   (maroquinerie) ; matière (accessoires).
 - Stock : pour chaque pointure cochée, l'admin choisit son état (neuf ou
-  occasion /10, propre à chaque pointure) et le nombre de paires ; pour une
-  taille unique, l'état de l'article et la quantité.
+  occasion /10, propre à chaque pointure) et le nombre de paires ; « + état »
+  ajoute la même pointure dans un autre état (ex. un 42 neuf et un 42 en 6/10).
+  Pour une taille unique : l'état de l'article et la quantité.
 - Sur chaque fiche, chaque carte et dans `/admin`, l'admin voit **« Modifier »**
   (même formulaire, pré-rempli : prix, stock, photos…) et **« Supprimer »**.
 

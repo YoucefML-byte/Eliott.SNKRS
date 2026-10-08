@@ -5,7 +5,8 @@ import { HttpError } from "./http.ts";
 import type { Customer, OrderRow, Provider } from "./db.ts";
 
 export interface CheckoutInput {
-  items: { slug: string; size: string; qty: number }[];
+  /** condition : état de la ligne de stock (« neuf », « occasion-6 ») ; vide = la première de la pointure */
+  items: { slug: string; size: string; condition: string; qty: number }[];
   customer: Customer;
   shipping: string;
   provider: Provider;
@@ -15,6 +16,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const isUuid = (s: unknown): s is string => typeof s === "string" && UUID.test(s);
 
 const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+const CONDITION = /^(neuf|occasion-\d{1,2})$/;
 
 export function parseCheckout(body: unknown): CheckoutInput {
   const b = (body ?? {}) as Record<string, unknown>;
@@ -24,10 +26,14 @@ export function parseCheckout(body: unknown): CheckoutInput {
   const items = b.items.map((i) => {
     const it = (i ?? {}) as Record<string, unknown>;
     const qty = Number(it.qty);
-    if (!str(it.slug, 200) || !str(it.size, 10) || !Number.isInteger(qty) || qty < 1 || qty > 5) {
+    const condition = str(it.condition, 20);
+    if (
+      !str(it.slug, 200) || !str(it.size, 10) || !Number.isInteger(qty) || qty < 1 || qty > 5 ||
+      (condition && !CONDITION.test(condition))
+    ) {
       throw bad("Ligne de panier invalide.");
     }
-    return { slug: str(it.slug, 200), size: str(it.size, 10), qty };
+    return { slug: str(it.slug, 200), size: str(it.size, 10), condition, qty };
   });
 
   const c = (b.customer ?? {}) as Record<string, unknown>;
@@ -73,7 +79,15 @@ export function publicOrder(o: OrderRow) {
     number: o.number,
     status: o.status,
     provider: o.provider,
-    items: o.items.map(({ slug, name, colorway, size, qty, price }) => ({ slug, name, colorway, size, qty, price })),
+    items: o.items.map(({ slug, name, colorway, size, condition, qty, price }) => ({
+      slug,
+      name,
+      colorway,
+      size,
+      condition,
+      qty,
+      price,
+    })),
     subtotal: o.subtotal,
     shippingMethod: o.shipping_method,
     shippingPrice: o.shipping_price,
@@ -90,6 +104,13 @@ export const SHIPPING_LABELS: Record<string, string> = {
   express: "Express (Chronopost)",
 };
 
-export const lineLabel = (i: { name: string; size: string }) => `${i.name} — EU ${i.size}`;
+/** « Neuf », « Occasion 6/10 » */
+export const conditionLabel = (code: string) => (code === "neuf" ? "Neuf" : `Occasion ${code.split("-")[1]}/10`);
+
+/** libellé d'une ligne sur la page de paiement : « Dunk Low — EU 42 · Occasion 6/10 » */
+export const lineLabel = (i: { name: string; size: string; condition?: string }) => {
+  const size = i.size === "TU" ? "Taille unique" : `EU ${i.size}`;
+  return `${i.name} — ${size}${i.condition ? ` · ${conditionLabel(i.condition)}` : ""}`;
+};
 export const cents = (n: number) => Math.round(n * 100);
 export const money = (n: number) => n.toFixed(2);

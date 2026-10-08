@@ -37,7 +37,7 @@ export function CartPageView() {
         <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_380px] lg:gap-16">
           <ul className="divide-y divide-line border-y border-line">
             {cart.lines.map((l) => (
-              <CartLineItem key={l.slug + l.size} line={l} large />
+              <CartLineItem key={`${l.slug}|${l.size}|${l.condition ?? ""}`} line={l} large />
             ))}
           </ul>
 

@@ -41,7 +41,7 @@ export function CartDrawer() {
           </div>
           <ul className="flex-1 divide-y divide-line overflow-y-auto px-5">
             {cart.lines.map((l) => (
-              <CartLineItem key={l.slug + l.size} line={l} onNavigate={close} />
+              <CartLineItem key={`${l.slug}|${l.size}|${l.condition ?? ""}`} line={l} onNavigate={close} />
             ))}
           </ul>
           <div className="border-t border-line px-5 pb-[calc(env(safe-area-inset-bottom)+20px)] pt-4">

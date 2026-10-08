@@ -2,6 +2,7 @@
 
 import type { SizeOption } from "@/data/types";
 import { sizeValue } from "@/lib/format";
+import { conditionCode, conditionRank, optionKey } from "@/lib/products";
 import { cn } from "@/lib/utils";
 
 export function SizeSelector({
@@ -10,22 +11,27 @@ export function SizeSelector({
   onChange,
 }: {
   sizes: SizeOption[];
+  /** selected stock line (optionKey: a size in one condition) */
   value: string | null;
-  onChange: (size: string) => void;
+  onChange: (key: string) => void;
 }) {
-  const sorted = [...sizes].sort((a, b) => sizeValue(a.size) - sizeValue(b.size));
+  // une même pointure peut apparaître dans plusieurs états : neuf d'abord
+  const sorted = [...sizes].sort(
+    (a, b) => sizeValue(a.size) - sizeValue(b.size) || conditionRank(conditionCode(a)) - conditionRank(conditionCode(b)),
+  );
   return (
     <div role="radiogroup" aria-label="Pointure" className="grid grid-cols-3 gap-2 sm:grid-cols-4">
       {sorted.map((s) => {
         const sold = s.stock === 0;
-        const active = value === s.size;
+        const key = optionKey(s);
+        const active = value === key;
         return (
           <button
-            key={s.size}
+            key={key}
             role="radio"
             aria-checked={active}
             disabled={sold}
-            onClick={() => onChange(s.size)}
+            onClick={() => onChange(key)}
             className={cn(
               "relative flex h-16 flex-col items-center justify-center rounded-md border text-center transition-colors",
               active ? "border-acc bg-acc/10" : "border-line hover:border-ink",

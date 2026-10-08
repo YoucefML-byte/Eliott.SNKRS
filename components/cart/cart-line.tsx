@@ -52,11 +52,11 @@ export function CartLineItem({
           <QuantityStepper
             value={line.qty}
             max={option.stock}
-            onChange={(q) => cart.setQty(product.slug, line.size, q)}
+            onChange={(q) => cart.setQty(line, q)}
             label={`Quantité, ${product.name} ${sizeText(line.size)}`}
           />
           <button
-            onClick={() => cart.remove(product.slug, line.size)}
+            onClick={() => cart.remove(line)}
             className="label text-muted underline-offset-4 hover:text-ink hover:underline"
           >
             Retirer
