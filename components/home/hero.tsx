@@ -2,8 +2,6 @@
 
 import { ArrowDown } from "lucide-react";
 
-import { Wordmark } from "@/components/brand/logo";
-
 import { Logo3D } from "./logo-3d";
 
 /** Ouverture de l'accueil : le monogramme en 3D qui tourne, et une phrase à côté. */
@@ -19,8 +17,7 @@ export function HomeHero() {
         <Logo3D className="mx-auto aspect-square w-full max-w-[min(88vw,560px)] lg:max-w-[640px]" />
 
         <div className="max-w-[30rem] lg:justify-self-start">
-          <Wordmark className="text-[28px] md:text-[34px]" />
-          <p className="mt-5 font-display text-[34px] font-medium uppercase leading-[1.12] tracking-tight md:text-[52px]">
+          <p className="font-display text-[34px] font-medium uppercase leading-[1.12] tracking-tight md:text-[52px] md:leading-[1.2]">
             Pièces rares,
             <br />
             authentifiées
