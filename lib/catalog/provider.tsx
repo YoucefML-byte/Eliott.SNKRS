@@ -18,10 +18,15 @@ interface CatalogApi {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   addPair: (input: NewPairInput) => Promise<Product>;
+  updatePair: (product: Product, input: NewPairInput) => Promise<Product>;
   removePair: (product: Product) => Promise<void>;
-  /** admin "add a pair" panel, opened from the header */
+  /** admin "add an article" panel, opened from the header */
   formOpen: boolean;
   setFormOpen: (open: boolean) => void;
+  /** article being edited in that panel (null: a new one) */
+  editing: Product | null;
+  /** opens the panel on an existing article */
+  editPair: (product: Product) => void;
 }
 
 const CatalogContext = createContext<CatalogApi | null>(null);
@@ -35,7 +40,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [admin, setAdmin] = useState<AdminUser | null>(null);
-  const [formOpen, setFormOpen] = useState(false);
+  const [form, setForm] = useState<{ open: boolean; product: Product | null }>({ open: false, product: null });
 
   useEffect(() => {
     let alive = true;
@@ -61,18 +66,25 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     error,
     mode: catalogBackend.mode,
     admin,
-    formOpen,
-    setFormOpen,
+    formOpen: form.open,
+    setFormOpen: (open) => setForm({ open, product: null }),
+    editing: form.product,
+    editPair: (product) => setForm({ open: true, product }),
     signIn: async (email, password) => setAdmin(await catalogBackend.signIn(email, password)),
     signOut: async () => {
       await catalogBackend.signOut();
       setAdmin(null);
-      setFormOpen(false);
+      setForm({ open: false, product: null });
     },
     addPair: async (input) => {
       const product = await catalogBackend.create(input);
       setProducts((list) => [product, ...list]);
       return product;
+    },
+    updatePair: async (product, input) => {
+      const next = await catalogBackend.update(product, input);
+      setProducts((list) => list.map((p) => (p.slug === product.slug ? next : p)));
+      return next;
     },
     removePair: async (product) => {
       await catalogBackend.remove(product);

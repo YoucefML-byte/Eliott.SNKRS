@@ -4,11 +4,14 @@ import { ImagePlus, Star, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 
+import { QuantityStepper } from "@/components/cart/quantity-stepper";
+import { ProductImage } from "@/components/product/product-image";
 import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
-import { BRANDS } from "@/data/brands";
+import { brandName, BRANDS } from "@/data/brands";
 import {
   CATEGORIES,
+  categoryOf,
   COLORS,
   DIMENSIONS,
   GENDERS,
@@ -16,11 +19,13 @@ import {
   ONE_SIZE,
   SHOE_SIZES,
   STRAPS,
+  subOf,
   type CategoryId,
 } from "@/data/taxonomy";
-import type { Condition } from "@/data/types";
+import type { Condition, Product, ProductImage as Image, SizeOption } from "@/data/types";
 import { preparePhoto } from "@/lib/catalog/images";
 import { useCatalog } from "@/lib/catalog/provider";
+import { sizeValue } from "@/lib/format";
 import { brandsOf, productHref } from "@/lib/products";
 import { cn } from "@/lib/utils";
 
@@ -28,44 +33,57 @@ import { cn } from "@/lib/utils";
 const SIZES = SHOE_SIZES;
 const GRADES = [10, 9, 8, 7, 6, 5];
 const MAX_PHOTOS = 8;
+const MAX_QTY = 99;
 
+/** a new file, or a photo already online (edit) */
 interface Photo {
   id: string;
-  file: File;
-  url: string;
+  url?: string;
+  file?: File;
+  image?: Image;
 }
 
 const inputClass =
   "h-12 w-full rounded-md border border-line bg-surface px-4 text-[15px] text-ink outline-none transition-colors placeholder:text-dim focus:border-acc";
 
-/** "Ajouter un article" panel, opened from the header by the admin. */
+/** "Ajouter un article" / "Modifier l'article" panel, for the admin. */
 export function ProductFormSheet() {
-  const { admin, formOpen, setFormOpen } = useCatalog();
+  const { admin, formOpen, setFormOpen, editing } = useCatalog();
   if (!admin) return null;
   return (
     <Sheet
       open={formOpen}
       onClose={() => setFormOpen(false)}
-      label="Ajouter un article"
+      label={editing ? "Modifier l'article" : "Ajouter un article"}
       className="max-w-[600px]"
     >
-      <ProductForm onDone={() => setFormOpen(false)} />
+      <ProductForm key={editing?.slug ?? "new"} product={editing} onDone={() => setFormOpen(false)} />
     </Sheet>
   );
 }
 
-function ProductForm({ onDone }: { onDone: () => void }) {
-  const { addPair, products } = useCatalog();
+/** « 9/10 » → value of the condition picker of a size line */
+const conditionValue = (o: Pick<SizeOption, "condition" | "grade">) =>
+  o.condition === "Neuf" ? "neuf" : `occasion-${o.grade ?? 9}`;
+
+function ProductForm({ product, onDone }: { product: Product | null; onDone: () => void }) {
+  const { addPair, updatePair, products } = useCatalog();
   const router = useRouter();
   const brandListId = useId();
   const fileInput = useRef<HTMLInputElement>(null);
+  const first = product?.sizes[0];
+  const initialCategory = product ? categoryOf(product).id : "chaussures";
 
-  const [photos, setPhotos] = useState<Photo[]>([]);
-  const [category, setCategory] = useState<CategoryId>("chaussures");
+  const [photos, setPhotos] = useState<Photo[]>(
+    () => product?.images.map((image) => ({ id: crypto.randomUUID(), url: image.src, image })) ?? [],
+  );
+  const [category, setCategory] = useState<CategoryId>(initialCategory);
   const cat = CATEGORIES.find((c) => c.id === category)!;
-  const [condition, setCondition] = useState<Condition>("Neuf");
-  const [grade, setGrade] = useState(9);
-  const [sizes, setSizes] = useState<string[]>([]);
+  const [condition, setCondition] = useState<Condition>(first?.condition ?? "Neuf");
+  const [grade, setGrade] = useState(first?.grade ?? 9);
+  // stock par pointure (chaussures) ; quantité pour une taille unique
+  const [stock, setStock] = useState<SizeOption[]>(product?.sizes.filter((s) => s.size !== ONE_SIZE) ?? []);
+  const [oneQty, setOneQty] = useState(product?.sizes.find((s) => s.size === ONE_SIZE)?.stock ?? 1);
   const [dragging, setDragging] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -75,7 +93,7 @@ function ProductForm({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     photosRef.current = photos;
   }, [photos]);
-  useEffect(() => () => photosRef.current.forEach((p) => URL.revokeObjectURL(p.url)), []);
+  useEffect(() => () => photosRef.current.forEach((p) => p.file && p.url && URL.revokeObjectURL(p.url)), []);
 
   const brandSuggestions = [
     ...new Set([...brandsOf(products).map((b) => b.name), ...BRANDS.map((b) => b.name)]),
@@ -95,15 +113,34 @@ function ProductForm({ onDone }: { onDone: () => void }) {
   const removePhoto = (id: string) =>
     setPhotos((list) => {
       const gone = list.find((p) => p.id === id);
-      if (gone) URL.revokeObjectURL(gone.url);
+      if (gone?.file && gone.url) URL.revokeObjectURL(gone.url);
       return list.filter((p) => p.id !== id);
     });
 
   const makeMain = (id: string) =>
     setPhotos((list) => [...list.filter((p) => p.id === id), ...list.filter((p) => p.id !== id)]);
 
-  const toggleSize = (s: string) =>
-    setSizes((list) => (list.includes(s) ? list.filter((x) => x !== s) : [...list, s]));
+  const lineFor = (size: string, stock = 1): SizeOption => ({
+    size,
+    condition,
+    grade: condition === "Occasion" ? grade : undefined,
+    stock,
+  });
+  const has = (size: string) => stock.some((o) => o.size === size);
+  const toggleSize = (size: string) =>
+    setStock((list) =>
+      list.some((o) => o.size === size) ? list.filter((o) => o.size !== size) : [...list, lineFor(size)],
+    );
+  const setLine = (size: string, patch: Partial<SizeOption>) =>
+    setStock((list) => list.map((o) => (o.size === size ? { ...o, ...patch } : o)));
+  // l'état choisi en haut s'applique à toutes les pointures
+  const applyCondition = (c: Condition, g: number) => {
+    setCondition(c);
+    setGrade(g);
+    setStock((list) => list.map((o) => ({ ...o, condition: c, grade: c === "Occasion" ? g : undefined })));
+  };
+  const lines = [...stock].sort((a, b) => sizeValue(a.size) - sizeValue(b.size));
+  const total = cat.sized ? stock.reduce((n, o) => n + o.stock, 0) : oneQty;
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -112,18 +149,19 @@ function ProductForm({ onDone }: { onDone: () => void }) {
     const price = Number(text("price").replace(",", "."));
 
     if (!photos.length) return setError("Ajoute au moins une photo.");
-    if (cat.sized && !sizes.length) return setError("Choisis au moins une pointure.");
+    if (cat.sized && !stock.length) return setError("Choisis au moins une pointure.");
+    if (!product && total === 0) return setError("Indique au moins une pièce en stock.");
     if (!(price > 0)) return setError("Indique un prix valide.");
 
     setError(null);
     try {
       setStatus("Préparation des photos…");
-      const prepared = await Promise.all(photos.map((p) => preparePhoto(p.file)));
-      setStatus("Mise en ligne…");
+      const prepared = await Promise.all(photos.map((p) => (p.file ? preparePhoto(p.file) : p.image!)));
+      setStatus(product ? "Enregistrement…" : "Mise en ligne…");
       const attributes = Object.fromEntries(
         ["movement", "caseSize", "material", "strap", "dimension"].map((k) => [k, text(k)]).filter(([, v]) => v),
       );
-      const product = await addPair({
+      const input = {
         category,
         subcategory: text("subcategory") || cat.subs[0].id,
         model: text("model"),
@@ -134,14 +172,18 @@ function ProductForm({ onDone }: { onDone: () => void }) {
         brand: text("brand"),
         colorway: text("colorway"),
         price,
-        condition,
-        grade: condition === "Occasion" ? grade : undefined,
-        sizes: cat.sized ? [...sizes].sort((a, b) => SIZES.indexOf(a) - SIZES.indexOf(b)) : [ONE_SIZE],
+        sizes: cat.sized ? lines : [lineFor(ONE_SIZE, oneQty)],
         description: text("description"),
         photos: prepared,
-      });
-      onDone();
-      router.push(productHref(product.slug));
+      };
+      if (product) {
+        await updatePair(product, input);
+        onDone();
+      } else {
+        const created = await addPair(input);
+        onDone();
+        router.push(productHref(created.slug));
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "La mise en ligne a échoué.");
       setStatus(null);
@@ -151,7 +193,9 @@ function ProductForm({ onDone }: { onDone: () => void }) {
   return (
     <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center justify-between border-b border-line px-5 py-4">
-        <h2 className="font-display text-xl font-medium uppercase">Ajouter un article</h2>
+        <h2 className="font-display text-xl font-medium uppercase">
+          {product ? "Modifier l'article" : "Ajouter un article"}
+        </h2>
         <button
           type="button"
           onClick={onDone}
@@ -183,8 +227,12 @@ function ProductForm({ onDone }: { onDone: () => void }) {
           >
             {photos.map((p, i) => (
               <div key={p.id} className="group relative aspect-square overflow-hidden rounded-sm bg-tile">
-                {/* eslint-disable-next-line @next/next/no-img-element -- local preview */}
-                <img src={p.url} alt={`Photo ${i + 1}`} className="size-full object-cover" />
+                {p.url ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- local preview
+                  <img src={p.url} alt={`Photo ${i + 1}`} className="size-full object-cover" />
+                ) : (
+                  product && <ProductImage product={product} image={p.image} className="size-full" />
+                )}
                 {i === 0 ? (
                   <span className="label absolute bottom-1 left-1 rounded-sm bg-acc px-1.5 py-0.5 text-[9px] text-on-acc">
                     Principale
@@ -252,7 +300,14 @@ function ProductForm({ onDone }: { onDone: () => void }) {
               </button>
             ))}
           </div>
-          <select key={category} id="subcategory" name="subcategory" aria-label={cat.subLabel} className={cn(inputClass, "mt-3")}>
+          <select
+            key={category}
+            id="subcategory"
+            name="subcategory"
+            aria-label={cat.subLabel}
+            defaultValue={product && category === initialCategory ? subOf(product).id : undefined}
+            className={cn(inputClass, "mt-3")}
+          >
             {cat.subs.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.label}
@@ -266,6 +321,7 @@ function ProductForm({ onDone }: { onDone: () => void }) {
             id="name"
             name="name"
             required
+            defaultValue={product?.name}
             placeholder={PLACEHOLDERS[category]}
             className={inputClass}
           />
@@ -278,6 +334,7 @@ function ProductForm({ onDone }: { onDone: () => void }) {
               name="brand"
               required
               list={brandListId}
+              defaultValue={product ? brandName(product.brand) : undefined}
               placeholder="Nike"
               autoComplete="off"
               className={inputClass}
@@ -294,6 +351,7 @@ function ProductForm({ onDone }: { onDone: () => void }) {
               name="price"
               required
               inputMode="decimal"
+              defaultValue={product ? String(product.price).replace(".", ",") : undefined}
               placeholder="290"
               className={inputClass}
             />
@@ -304,6 +362,7 @@ function ProductForm({ onDone }: { onDone: () => void }) {
           <input
             id="colorway"
             name="colorway"
+            defaultValue={product?.colorway}
             placeholder={category === "chaussures" ? "Travis Scott · Reverse Mocha" : "Monogram, cadran bleu…"}
             className={inputClass}
           />
@@ -311,7 +370,7 @@ function ProductForm({ onDone }: { onDone: () => void }) {
 
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Couleur dominante" htmlFor="color" hint="Pour le filtre">
-            <select id="color" name="color" defaultValue="" className={inputClass}>
+            <select id="color" name="color" defaultValue={product?.color ?? ""} className={inputClass}>
               <option value="">—</option>
               {COLORS.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -325,6 +384,7 @@ function ProductForm({ onDone }: { onDone: () => void }) {
               <input
                 id="model"
                 name="model"
+                defaultValue={product?.model}
                 placeholder={category === "montres" ? "Speedmaster" : "Air Jordan 1"}
                 className={inputClass}
               />
@@ -332,25 +392,31 @@ function ProductForm({ onDone }: { onDone: () => void }) {
           )}
           {category === "chaussures" && (
             <Field label="Genre" htmlFor="gender" hint="Facultatif">
-              <Select name="gender" options={GENDERS} />
+              <Select name="gender" options={GENDERS} value={product?.gender} />
             </Field>
           )}
           {category === "montres" && (
             <>
               <Field label="Mouvement" htmlFor="movement">
-                <Select name="movement" options={MOVEMENTS} />
+                <Select name="movement" options={MOVEMENTS} value={product?.attributes?.movement} />
               </Field>
               <Field label="Taille du boîtier" htmlFor="caseSize" hint="Ex. 40 mm">
-                <input id="caseSize" name="caseSize" placeholder="40 mm" className={inputClass} />
+                <input
+                  id="caseSize"
+                  name="caseSize"
+                  defaultValue={product?.attributes?.caseSize}
+                  placeholder="40 mm"
+                  className={inputClass}
+                />
               </Field>
               <Field label="Bracelet" htmlFor="strap">
-                <Select name="strap" options={STRAPS} />
+                <Select name="strap" options={STRAPS} value={product?.attributes?.strap} />
               </Field>
             </>
           )}
           {category === "maroquinerie" && (
             <Field label="Taille" htmlFor="dimension">
-              <Select name="dimension" options={DIMENSIONS} />
+              <Select name="dimension" options={DIMENSIONS} value={product?.attributes?.dimension} />
             </Field>
           )}
           {category !== "chaussures" && (
@@ -358,6 +424,7 @@ function ProductForm({ onDone }: { onDone: () => void }) {
               <input
                 id="material"
                 name="material"
+                defaultValue={product?.attributes?.material}
                 placeholder={category === "montres" ? "Acier" : "Cuir de veau"}
                 className={inputClass}
               />
@@ -365,7 +432,7 @@ function ProductForm({ onDone }: { onDone: () => void }) {
           )}
         </div>
 
-        <Field label="État">
+        <Field label="État" hint={cat.sized && stock.length > 1 ? "S'applique à toutes les pointures" : undefined}>
           <div className="grid grid-cols-2 rounded-md border border-line p-1" role="radiogroup" aria-label="État">
             {(["Neuf", "Occasion"] as const).map((c) => (
               <button
@@ -373,7 +440,7 @@ function ProductForm({ onDone }: { onDone: () => void }) {
                 type="button"
                 role="radio"
                 aria-checked={condition === c}
-                onClick={() => setCondition(c)}
+                onClick={() => applyCondition(c, grade)}
                 className={cn(
                   "h-10 rounded-sm text-sm transition-colors",
                   condition === c ? "bg-raised text-ink" : "text-muted hover:text-ink",
@@ -391,7 +458,7 @@ function ProductForm({ onDone }: { onDone: () => void }) {
                   key={g}
                   type="button"
                   aria-pressed={grade === g}
-                  onClick={() => setGrade(g)}
+                  onClick={() => applyCondition("Occasion", g)}
                   className={cn(
                     "h-9 min-w-12 rounded-md border px-2 font-mono text-sm tabular-nums",
                     grade === g ? "border-acc bg-acc text-on-acc" : "border-line text-muted hover:border-ink",
@@ -405,30 +472,96 @@ function ProductForm({ onDone }: { onDone: () => void }) {
         </Field>
 
         {cat.sized ? (
-        <Field label="Pointures disponibles" hint="Une paire par pointure cochée">
-          <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-6">
-            {SIZES.map((s) => (
-              <button
-                key={s}
-                type="button"
-                aria-pressed={sizes.includes(s)}
-                onClick={() => toggleSize(s)}
-                className={cn(
-                  "h-10 rounded-md border font-mono text-[13px] tabular-nums transition-colors",
-                  sizes.includes(s)
-                    ? "border-acc bg-acc text-on-acc"
-                    : "border-line text-muted hover:border-ink hover:text-ink",
-                )}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        </Field>
+          <Field label="Pointures et stock" hint="Touche une pointure, puis indique le nombre de paires">
+            <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-6">
+              {SIZES.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  aria-pressed={has(s)}
+                  onClick={() => toggleSize(s)}
+                  className={cn(
+                    "h-10 rounded-md border font-mono text-[13px] tabular-nums transition-colors",
+                    has(s) ? "border-acc bg-acc text-on-acc" : "border-line text-muted hover:border-ink hover:text-ink",
+                  )}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+            {lines.length > 0 && (
+              <>
+                <ul className="mt-4 divide-y divide-line rounded-md border border-line" aria-label="Stock par pointure">
+                  {lines.map((o) => (
+                    <li key={o.size} className="flex items-center gap-2 py-2 pl-3 pr-1">
+                      <span className="w-12 shrink-0">
+                        <span className={cn("block font-mono text-sm tabular-nums", o.stock === 0 && "text-dim line-through")}>
+                          {o.size}
+                        </span>
+                        {o.stock === 0 && <span className="block text-[10px] uppercase text-dim">Épuisée</span>}
+                      </span>
+                      <select
+                        aria-label={`État de la pointure ${o.size}`}
+                        value={conditionValue(o)}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setLine(
+                            o.size,
+                            v === "neuf"
+                              ? { condition: "Neuf", grade: undefined }
+                              : { condition: "Occasion", grade: Number(v.split("-")[1]) },
+                          );
+                        }}
+                        className="h-9 min-w-0 flex-1 rounded-md border border-line bg-surface px-2 text-sm text-ink outline-none focus:border-acc"
+                      >
+                        <option value="neuf">Neuf</option>
+                        {GRADES.map((g) => (
+                          <option key={g} value={`occasion-${g}`}>
+                            Occ. {g}/10
+                          </option>
+                        ))}
+                      </select>
+                      <QuantityStepper
+                        value={o.stock}
+                        min={0}
+                        max={MAX_QTY}
+                        onChange={(n) => setLine(o.size, { stock: n })}
+                        label={`Nombre de paires en ${o.size}`}
+                        maxTitle="Maximum atteint"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => toggleSize(o.size)}
+                        aria-label={`Retirer la pointure ${o.size}`}
+                        className="grid size-9 shrink-0 place-items-center rounded-md text-muted hover:bg-raised hover:text-ink"
+                      >
+                        <X className="size-4" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-right font-mono text-xs text-muted">
+                  {total} paire{total > 1 ? "s" : ""} en stock
+                </p>
+              </>
+            )}
+          </Field>
         ) : (
-          <p className="rounded-md border border-line bg-surface px-4 py-3 text-sm text-muted">
-            Taille unique : une pièce est mise en vente.
-          </p>
+          <Field label="Quantité en stock" hint="Taille unique">
+            <div className="flex items-center justify-between rounded-md border border-line px-4 py-2">
+              <span className={cn("text-sm", oneQty === 0 ? "text-dim" : "text-muted")}>
+                {oneQty === 0 ? "Épuisé" : oneQty === 1 ? "Pièce unique" : `${oneQty} pièces`}
+              </span>
+              <QuantityStepper
+                value={oneQty}
+                min={product ? 0 : 1}
+                max={MAX_QTY}
+                onChange={setOneQty}
+                label="Quantité en stock"
+                maxTitle="Maximum atteint"
+              />
+            </div>
+          </Field>
         )}
 
         <Field label="Description" htmlFor="description">
@@ -436,6 +569,7 @@ function ProductForm({ onDone }: { onDone: () => void }) {
             id="description"
             name="description"
             rows={4}
+            defaultValue={product?.description}
             placeholder="Matières, détails, défauts éventuels, boîte d'origine…"
             className={cn(inputClass, "h-auto py-3 leading-relaxed")}
           />
@@ -449,7 +583,7 @@ function ProductForm({ onDone }: { onDone: () => void }) {
           </p>
         )}
         <Button type="submit" size="lg" className="w-full" disabled={Boolean(status)}>
-          {status ?? "Mettre en ligne"}
+          {status ?? (product ? "Enregistrer les modifications" : "Mettre en ligne")}
         </Button>
       </div>
     </form>
@@ -463,9 +597,9 @@ const PLACEHOLDERS: Record<CategoryId, string> = {
   accessoires: "Lunettes Millionaire",
 };
 
-function Select({ name, options }: { name: string; options: readonly string[] }) {
+function Select({ name, options, value }: { name: string; options: readonly string[]; value?: string }) {
   return (
-    <select id={name} name={name} defaultValue="" className={inputClass}>
+    <select id={name} name={name} defaultValue={value ?? ""} className={inputClass}>
       <option value="">—</option>
       {options.map((o) => (
         <option key={o} value={o}>

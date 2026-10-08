@@ -1,10 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Product, ProductImage, SizeOption } from "@/data/types";
-import { asset } from "@/lib/asset";
+import { asset, BASE_PATH } from "@/lib/asset";
 
-import { buildProduct, makeSlug, NEUTRAL_COLORS } from "./build";
-import type { CatalogBackend } from "./types";
+import { buildProduct, editedProduct, imagesFrom, makeSlug, NEUTRAL_COLORS, newPhotos } from "./build";
+import type { CatalogBackend, NewPairInput } from "./types";
 
 // Production mode: pairs in a Supabase (PostgreSQL) table, photos in Supabase
 // Storage. Security lives in the database rules (supabase/schema.sql): anyone
@@ -44,6 +44,9 @@ export const supabase = () =>
 
 // images seeded from the repo are stored as "/products/…" paths
 const resolveSrc = (src?: string) => (src && src.startsWith("/") ? asset(src) : src);
+/** inverse of resolveSrc, to save a gallery back */
+const storedSrc = (src?: string) =>
+  src && BASE_PATH && src.startsWith(`${BASE_PATH}/`) ? src.slice(BASE_PATH.length) : src;
 
 const toProduct = (r: Row): Product => ({
   id: r.id,
@@ -115,40 +118,37 @@ export const supabaseBackend: CatalogBackend = {
   async create(input) {
     const sb = await supabase();
     const slug = makeSlug(input);
-    const urls: string[] = [];
-    for (const [i, photo] of input.photos.entries()) {
-      const ext = photo.type === "image/webp" ? "webp" : "jpg";
-      const path = `${slug}/${i + 1}.${ext}`;
-      const { error } = await sb.storage.from(BUCKET).upload(path, photo, { contentType: photo.type });
-      if (error) throw new Error(`Envoi de la photo ${i + 1} impossible : ${error.message}`);
-      urls.push(sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl);
-    }
-
-    const p = buildProduct(input, slug, urls);
+    const urls = await upload(sb, slug, input);
+    const p = buildProduct(input, slug, imagesFrom(input, urls));
     const { data, error } = await sb
       .from("products")
-      .insert({
-        slug: p.slug,
-        name: p.name,
-        brand: p.brand,
-        category: p.category,
-        subcategory: p.subcategory,
-        model: p.model ?? null,
-        gender: p.gender ?? null,
-        color: p.color ?? null,
-        attributes: p.attributes ?? {},
-        colorway: p.colorway,
-        price: p.price,
-        sizes: p.sizes,
-        description: p.description,
-        images: p.images,
-      })
+      .insert({ slug: p.slug, ...rowFields(p) })
       .select()
       .single();
     if (error) {
-      await sb.storage.from(BUCKET).remove(urls.map(storagePath).filter(Boolean) as string[]);
+      await removePhotos(sb, urls);
       throw new Error(`Enregistrement impossible : ${error.message}`);
     }
+    return toProduct(data as Row);
+  },
+
+  async update(product, input) {
+    const sb = await supabase();
+    const urls = await upload(sb, product.slug, input);
+    const p = editedProduct(product, input, imagesFrom(input, urls));
+    const { data, error } = await sb
+      .from("products")
+      .update(rowFields(p))
+      .eq("slug", product.slug)
+      .select()
+      .single();
+    if (error) {
+      await removePhotos(sb, urls);
+      throw new Error(`Enregistrement impossible : ${error.message}`);
+    }
+    // photos retirées de la fiche
+    const kept = new Set(p.images.map((i) => i.src));
+    await removePhotos(sb, product.images.map((i) => i.src).filter((src) => src && !kept.has(src)) as string[]);
     return toProduct(data as Row);
   },
 
@@ -156,7 +156,47 @@ export const supabaseBackend: CatalogBackend = {
     const sb = await supabase();
     const { error } = await sb.from("products").delete().eq("slug", product.slug);
     if (error) throw new Error(`Suppression impossible : ${error.message}`);
-    const paths = product.images.map((i) => storagePath(i.src)).filter(Boolean) as string[];
-    if (paths.length) await sb.storage.from(BUCKET).remove(paths);
+    await removePhotos(sb, product.images.map((i) => i.src).filter(Boolean) as string[]);
   },
 };
+
+/** uploads the new photos of the form, returns their public URLs */
+async function upload(sb: SupabaseClient, slug: string, input: NewPairInput) {
+  const urls: string[] = [];
+  // unique names: an edit adds photos next to the ones already online
+  const batch = Date.now().toString(36);
+  for (const [i, photo] of newPhotos(input).entries()) {
+    const ext = photo.type === "image/webp" ? "webp" : "jpg";
+    const path = `${slug}/${batch}-${i + 1}.${ext}`;
+    const { error } = await sb.storage.from(BUCKET).upload(path, photo, { contentType: photo.type });
+    if (error) {
+      await removePhotos(sb, urls);
+      throw new Error(`Envoi de la photo ${i + 1} impossible : ${error.message}`);
+    }
+    urls.push(sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl);
+  }
+  return urls;
+}
+
+/** deletes uploaded photos (the ones bundled with the site are not in Storage) */
+async function removePhotos(sb: SupabaseClient, urls: string[]) {
+  const paths = urls.map(storagePath).filter(Boolean) as string[];
+  if (paths.length) await sb.storage.from(BUCKET).remove(paths);
+}
+
+/** columns the admin form sets */
+const rowFields = (p: Product) => ({
+  name: p.name,
+  brand: p.brand,
+  category: p.category,
+  subcategory: p.subcategory,
+  model: p.model ?? null,
+  gender: p.gender ?? null,
+  color: p.color ?? null,
+  attributes: p.attributes ?? {},
+  colorway: p.colorway,
+  price: p.price,
+  sizes: p.sizes,
+  description: p.description,
+  images: p.images.map((img) => ({ ...img, src: storedSrc(img.src) })),
+});

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, MessageCircle, PackageCheck, ShieldCheck, Trash2, Truck } from "lucide-react";
+import { Check, ChevronDown, MessageCircle, PackageCheck, Pencil, ShieldCheck, Trash2, Truck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -247,9 +247,9 @@ function Details({ title, open, children }: { title: string; open?: boolean; chi
   );
 }
 
-/** Shown to the logged-in admin only: take the pair off the site. */
+/** Shown to the logged-in admin only: edit the article or take it off the site. */
 function AdminBar({ product }: { product: Product }) {
-  const { removePair } = useCatalog();
+  const { removePair, editPair } = useCatalog();
   const router = useRouter();
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -283,9 +283,14 @@ function AdminBar({ product }: { product: Product }) {
           </Button>
         </span>
       ) : (
-        <Button size="sm" variant="outline" onClick={() => setConfirm(true)}>
-          <Trash2 className="size-4" /> Supprimer l&apos;article
-        </Button>
+        <span className="flex flex-wrap items-center gap-2">
+          <Button size="sm" onClick={() => editPair(product)}>
+            <Pencil className="size-4" /> Modifier
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setConfirm(true)}>
+            <Trash2 className="size-4" /> Supprimer l&apos;article
+          </Button>
+        </span>
       )}
     </div>
   );

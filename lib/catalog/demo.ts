@@ -1,7 +1,7 @@
 import { PRODUCTS } from "@/data/products";
 import type { Product } from "@/data/types";
 
-import { buildProduct, makeSlug } from "./build";
+import { buildProduct, editedProduct, imagesFrom, makeSlug, newPhotos } from "./build";
 import { blobToDataUrl } from "./images";
 import type { AdminUser, CatalogBackend } from "./types";
 
@@ -12,6 +12,8 @@ export const DEMO_ADMIN = { email: "admin@eliott-snkrs.fr", password: "eliott-de
 
 const ADDED = "eliott-demo-added-v1";
 const HIDDEN = "eliott-demo-hidden-v1";
+/** edited versions of the bundled articles, by slug */
+const EDITED = "eliott-demo-edited-v1";
 const SESSION = "eliott-demo-admin-v1";
 
 function read<T>(key: string, fallback: T): T {
@@ -37,7 +39,8 @@ export const demoBackend: CatalogBackend = {
   async list() {
     const hidden = new Set(read<string[]>(HIDDEN, []));
     const added = read<Product[]>(ADDED, []);
-    return [...added, ...PRODUCTS].filter((p) => !hidden.has(p.slug));
+    const edited = read<Record<string, Product>>(EDITED, {});
+    return [...added, ...PRODUCTS.map((p) => edited[p.slug] ?? p)].filter((p) => !hidden.has(p.slug));
   },
 
   async currentAdmin() {
@@ -58,10 +61,22 @@ export const demoBackend: CatalogBackend = {
   },
 
   async create(input) {
-    const urls = await Promise.all(input.photos.map(blobToDataUrl));
-    const product = buildProduct(input, makeSlug(input), urls);
+    const urls = await Promise.all(newPhotos(input).map(blobToDataUrl));
+    const product = buildProduct(input, makeSlug(input), imagesFrom(input, urls));
     write(ADDED, [product, ...read<Product[]>(ADDED, [])]);
     return product;
+  },
+
+  async update(product, input) {
+    const urls = await Promise.all(newPhotos(input).map(blobToDataUrl));
+    const next = editedProduct(product, input, imagesFrom(input, urls));
+    const added = read<Product[]>(ADDED, []);
+    if (added.some((p) => p.slug === product.slug)) {
+      write(ADDED, added.map((p) => (p.slug === product.slug ? next : p)));
+    } else {
+      write(EDITED, { ...read<Record<string, Product>>(EDITED, {}), [product.slug]: next });
+    }
+    return next;
   },
 
   async remove(product) {

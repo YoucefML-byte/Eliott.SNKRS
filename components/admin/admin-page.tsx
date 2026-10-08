@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Plus, Trash2 } from "lucide-react";
+import { LogOut, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
@@ -176,11 +176,12 @@ function Dashboard() {
 }
 
 function AdminRow({ product }: { product: Product }) {
-  const { removePair } = useCatalog();
+  const { removePair, editPair } = useCatalog();
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const sizes = inStock(product).map((s) => s.size);
+  // « EU 38 ×2, EU 41 ×5 »
+  const sizes = inStock(product).map((s) => `${sizeText(s.size)}${s.stock > 1 ? ` ×${s.stock}` : ""}`);
 
   const remove = async () => {
     setBusy(true);
@@ -203,7 +204,7 @@ function AdminRow({ product }: { product: Product }) {
           {product.name}
         </Link>
         <p className="truncate text-sm text-muted">
-          {categoryOf(product).label} · {sizes.length ? sizes.map(sizeText).join(", ") : "vendu"}
+          {categoryOf(product).label} · {sizes.length ? sizes.join(", ") : "vendu"}
         </p>
         {error && <p className="mt-1 text-sm text-destructive">{error}</p>}
       </div>
@@ -218,9 +219,14 @@ function AdminRow({ product }: { product: Product }) {
           </Button>
         </span>
       ) : (
-        <Button size="sm" variant="outline" onClick={() => setConfirm(true)} aria-label={`Supprimer ${product.name}`}>
-          <Trash2 className="size-4" /> Supprimer
-        </Button>
+        <span className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => editPair(product)} aria-label={`Modifier ${product.name}`}>
+            <Pencil className="size-4" /> Modifier
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setConfirm(true)} aria-label={`Supprimer ${product.name}`}>
+            <Trash2 className="size-4" /> Supprimer
+          </Button>
+        </span>
       )}
     </li>
   );

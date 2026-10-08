@@ -1,5 +1,6 @@
 import { slugify } from "@/data/brands";
-import type { Colorway, Product, SizeOption } from "@/data/types";
+import type { Colorway, Product, ProductImage } from "@/data/types";
+import { sizeValue } from "@/lib/format";
 
 import type { NewPairInput } from "./types";
 
@@ -19,37 +20,47 @@ export const PHOTO_LABELS = ["Profil", "Vue latérale", "Vue avant", "Vue arriè
 export const makeSlug = (input: Pick<NewPairInput, "brand" | "name" | "colorway">) =>
   `${slugify(`${input.name} ${input.colorway}`).slice(0, 60)}-${Math.random().toString(36).slice(2, 6)}`;
 
-export const sizesFrom = (input: NewPairInput): SizeOption[] =>
-  input.sizes.map((size) => ({
-    size,
-    condition: input.condition,
-    grade: input.condition === "Occasion" ? input.grade : undefined,
-    stock: 1,
-  }));
+/** new photo files of the form, in order */
+export const newPhotos = (input: NewPairInput) => input.photos.filter((p): p is Blob => p instanceof Blob);
 
-/** Product object for a new pair, given the URLs its photos were stored at. */
-export function buildProduct(input: NewPairInput, slug: string, photoUrls: string[]): Product {
-  return {
-    slug,
-    name: input.name.trim(),
-    brand: slugify(input.brand),
-    category: input.category,
-    subcategory: input.subcategory,
-    model: input.model || undefined,
-    gender: input.gender,
-    color: input.color || undefined,
-    attributes: input.attributes,
-    colorway: input.colorway.trim(),
-    silhouette: "low",
-    colors: NEUTRAL_COLORS,
-    price: input.price,
-    sizes: sizesFrom(input),
-    images: photoUrls.map((src, i) => ({
-      view: i === 0 ? "side" : "detail",
-      src,
-      label: PHOTO_LABELS[i] ?? `Photo ${i + 1}`,
-    })),
-    arrivedAt: new Date().toISOString().slice(0, 10),
-    description: input.description.trim(),
-  };
+/** gallery in the order chosen: photos already online as they were, new ones at the URLs they were stored at */
+export function imagesFrom(input: NewPairInput, newUrls: string[]): ProductImage[] {
+  let next = 0;
+  return input.photos.map((photo, i) =>
+    photo instanceof Blob
+      ? { view: i === 0 ? "side" : "detail", src: newUrls[next++], label: PHOTO_LABELS[i] ?? `Photo ${i + 1}` }
+      : photo,
+  );
 }
+
+/** what the admin form sets on an article */
+const formFields = (input: NewPairInput, images: ProductImage[]) => ({
+  name: input.name.trim(),
+  brand: slugify(input.brand),
+  category: input.category,
+  subcategory: input.subcategory,
+  model: input.model || undefined,
+  gender: input.gender,
+  color: input.color || undefined,
+  attributes: input.attributes,
+  colorway: input.colorway.trim(),
+  price: input.price,
+  sizes: [...input.sizes].sort((a, b) => sizeValue(a.size) - sizeValue(b.size)),
+  images,
+  description: input.description.trim(),
+});
+
+/** Product object for a new article. */
+export const buildProduct = (input: NewPairInput, slug: string, images: ProductImage[]): Product => ({
+  slug,
+  silhouette: "low",
+  colors: NEUTRAL_COLORS,
+  arrivedAt: new Date().toISOString().slice(0, 10),
+  ...formFields(input, images),
+});
+
+/** The article after an edit: same slug and arrival date, the rest from the form. */
+export const editedProduct = (product: Product, input: NewPairInput, images: ProductImage[]): Product => ({
+  ...product,
+  ...formFields(input, images),
+});

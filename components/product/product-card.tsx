@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -66,9 +66,9 @@ export function ProductCard({ product, className }: { product: Product; classNam
   );
 }
 
-/** En mode admin : supprimer l'article directement depuis sa carte. */
+/** En mode admin : modifier ou supprimer l'article directement depuis sa carte. */
 function AdminDelete({ product }: { product: Product }) {
-  const { admin, removePair } = useCatalog();
+  const { admin, removePair, editPair } = useCatalog();
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -107,14 +107,24 @@ function AdminDelete({ product }: { product: Product }) {
           </button>
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={() => setConfirm(true)}
-          aria-label={`Supprimer ${product.name}`}
-          className="flex h-9 w-full items-center justify-center gap-2 rounded-md border border-destructive/40 text-xs text-destructive transition-colors hover:bg-destructive/10"
-        >
-          <Trash2 className="size-3.5" /> Supprimer l&apos;article
-        </button>
+        <div className="grid grid-cols-2 gap-1.5">
+          <button
+            type="button"
+            onClick={() => editPair(product)}
+            aria-label={`Modifier ${product.name}`}
+            className="flex h-9 items-center justify-center gap-1.5 rounded-md border border-line text-xs text-ink transition-colors hover:border-ink"
+          >
+            <Pencil className="size-3.5" /> Modifier
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirm(true)}
+            aria-label={`Supprimer ${product.name}`}
+            className="flex h-9 items-center justify-center gap-1.5 rounded-md border border-destructive/40 text-xs text-destructive transition-colors hover:bg-destructive/10"
+          >
+            <Trash2 className="size-3.5" /> Supprimer
+          </button>
+        </div>
       )}
       {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
     </div>

@@ -60,7 +60,10 @@ Next.js (App Router), React, TypeScript, Tailwind CSS v4, structure shadcn/ui
   champs propres à la catégorie : pointures, modèle et genre (chaussures) ;
   mouvement, boîtier, bracelet, matière (montres) ; taille et matière
   (maroquinerie) ; matière (accessoires).
-- Sur chaque fiche, l'admin voit un bouton **« Supprimer l'article »**.
+- Stock : pour chaque pointure cochée, l'admin indique le nombre de paires
+  (et l'état de chaque pointure si besoin) ; pour une taille unique, la quantité.
+- Sur chaque fiche, chaque carte et dans `/admin`, l'admin voit **« Modifier »**
+  (même formulaire, pré-rempli : prix, stock, photos…) et **« Supprimer »**.
 
 ### Mode démo (par défaut)
 

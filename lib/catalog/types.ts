@@ -1,7 +1,7 @@
 import type { CategoryId } from "@/data/taxonomy";
-import type { Condition, Product, ProductAttributes } from "@/data/types";
+import type { Product, ProductAttributes, ProductImage, SizeOption } from "@/data/types";
 
-/** What the admin fills in to put a pair online. */
+/** What the admin fills in to put an article online or edit it. */
 export interface NewPairInput {
   category: CategoryId;
   subcategory: string;
@@ -9,18 +9,15 @@ export interface NewPairInput {
   brand: string;
   colorway: string;
   price: number;
-  condition: Condition;
-  /** wear grade /10, used pairs only */
-  grade?: number;
-  /** EU sizes available, one pair each — ["TU"] for watches, bags… */
-  sizes: string[];
+  /** stock per EU size (condition, grade, number of pairs) — size "TU" for watches, bags… */
+  sizes: SizeOption[];
   model?: string;
   gender?: Product["gender"];
   color?: string;
   attributes?: ProductAttributes;
   description: string;
-  /** photos in display order, the first one is the main photo */
-  photos: Blob[];
+  /** photos in display order, the first one is the main photo: new files, or photos already online */
+  photos: (Blob | ProductImage)[];
 }
 
 export interface AdminUser {
@@ -35,5 +32,7 @@ export interface CatalogBackend {
   signIn(email: string, password: string): Promise<AdminUser>;
   signOut(): Promise<void>;
   create(input: NewPairInput): Promise<Product>;
+  /** edits an article in place (same slug, same address) */
+  update(product: Product, input: NewPairInput): Promise<Product>;
   remove(product: Product): Promise<void>;
 }
