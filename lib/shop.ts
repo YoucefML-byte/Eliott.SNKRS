@@ -21,6 +21,8 @@ import {
   conditionCodeLabel,
   conditionRank,
   fullName,
+  priceOf,
+  priceSpan,
   PRICE_RANGES,
   SORTS,
   type SortKey,
@@ -46,8 +48,8 @@ interface FilterDef {
   param: string;
   /** valeurs portées par l'article */
   values?: (p: Product) => (string | undefined)[];
-  /** valeurs portées par chaque exemplaire (pointure, état, disponibilité) */
-  option?: (o: SizeOption) => string | undefined;
+  /** valeurs portées par chaque exemplaire (pointure, état, prix, disponibilité) */
+  option?: (o: SizeOption, p: Product) => string | undefined;
   optionLabel?: (v: string, scope: Scope) => string;
   order?: (v: string, scope: Scope) => number;
 }
@@ -85,7 +87,8 @@ export const FILTERS: Record<FilterKey, FilterDef> = {
   price: {
     label: "Prix",
     param: "prix",
-    values: (p) => [priceRange(p.price)],
+    // le prix peut dépendre de l'état : chaque exemplaire compte avec le sien
+    option: (o, p) => priceRange(priceOf(p, o)),
     optionLabel: (v) => PRICE_RANGES.find((r) => r.id === v)?.label ?? v,
     order: indexIn(PRICE_RANGES.map((r) => r.id)),
   },
@@ -200,7 +203,7 @@ function matchingOptions(p: Product, sel: Selection, skip?: FilterKey) {
       const wanted = sel[key];
       // par défaut, les articles vendus sont masqués
       if (!wanted?.length) return key !== "availability" || o.stock > 0;
-      const v = def.option(o);
+      const v = def.option(o, p);
       // anciens liens ?etat=occasion : toutes les notes
       if (key === "condition" && v?.startsWith("occasion") && wanted.includes("occasion")) return true;
       return v !== undefined && wanted.includes(v);
@@ -224,8 +227,8 @@ export function results(products: Product[], scope: Scope, s: ShopState) {
   return products
     .filter((p) => inScope(p, scope) && passes(p, s))
     .sort((a, b) => {
-      if (s.sort === "prix-asc") return a.price - b.price;
-      if (s.sort === "prix-desc") return b.price - a.price;
+      if (s.sort === "prix-asc") return priceSpan(a).min - priceSpan(b).min;
+      if (s.sort === "prix-desc") return priceSpan(b).min - priceSpan(a).min;
       return b.arrivedAt.localeCompare(a.arrivedAt);
     });
 }
@@ -247,7 +250,7 @@ export function facet(products: Product[], scope: Scope, s: ShopState, key: Filt
   for (const p of products) {
     if (!inScope(p, scope)) continue;
     const valuesOf = (opts: SizeOption[]) =>
-      def.option ? opts.map(def.option) : (def.values?.(p) ?? []);
+      def.option ? opts.map((o) => def.option!(o, p)) : (def.values?.(p) ?? []);
     for (const v of valuesOf(p.sizes)) if (v !== undefined) all.add(v);
     // toutes les pointures sont proposées, même celles absentes du stock
     if (key === "size" && categoryOf(p).sized) for (const s of SHOE_SIZES) all.add(s);

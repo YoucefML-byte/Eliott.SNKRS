@@ -9,11 +9,14 @@ export function SizeSelector({
   sizes,
   value,
   onChange,
+  priceLabel,
 }: {
   sizes: SizeOption[];
   /** selected stock line (optionKey: a size in one condition) */
   value: string | null;
   onChange: (key: string) => void;
+  /** prix sous chaque pointure, quand il dépend de l'état */
+  priceLabel?: (o: SizeOption) => string;
 }) {
   // une même pointure peut apparaître dans plusieurs états : neuf d'abord
   const sorted = [...sizes].sort(
@@ -33,7 +36,8 @@ export function SizeSelector({
             disabled={sold}
             onClick={() => onChange(key)}
             className={cn(
-              "relative flex h-16 flex-col items-center justify-center rounded-md border text-center transition-colors",
+              "relative flex flex-col items-center justify-center rounded-md border text-center transition-colors",
+              priceLabel ? "h-20" : "h-16",
               active ? "border-acc bg-acc/10" : "border-line hover:border-ink",
               sold && "cursor-not-allowed border-dashed opacity-45",
             )}
@@ -49,6 +53,9 @@ export function SizeSelector({
             >
               {sold ? "Vendue" : s.condition === "Neuf" ? "Neuf" : `Occ. ${s.grade}/10`}
             </span>
+            {priceLabel && !sold && (
+              <span className="mt-1 font-mono text-[12px] tabular-nums text-ink">{priceLabel(s)}</span>
+            )}
           </button>
         );
       })}

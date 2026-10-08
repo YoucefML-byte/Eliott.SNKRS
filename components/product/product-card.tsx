@@ -8,8 +8,8 @@ import { brandName } from "@/data/brands";
 import { categoryOf, ONE_SIZE, subOf } from "@/data/taxonomy";
 import type { Product } from "@/data/types";
 import { useCatalog } from "@/lib/catalog/provider";
-import { formatPrice, sizeValue } from "@/lib/format";
-import { availability, inStock, productHref } from "@/lib/products";
+import { sizeValue } from "@/lib/format";
+import { availability, inStock, priceText, productHref } from "@/lib/products";
 import { cn } from "@/lib/utils";
 
 import { ProductBadges } from "./condition-badge";
@@ -54,7 +54,7 @@ export function ProductCard({ product, className }: { product: Product; classNam
           </h3>
           <p className="truncate text-sm text-muted">{product.colorway}</p>
         </div>
-        <p className="shrink-0 font-mono text-[15px] tabular-nums sm:pt-[18px]">{formatPrice(product.price)}</p>
+        <p className="shrink-0 font-mono text-[15px] tabular-nums sm:pt-[18px]">{priceText(product)}</p>
       </div>
 
       <p className="mt-2 truncate font-mono text-[11px] tracking-wide text-dim">

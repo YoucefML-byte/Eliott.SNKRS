@@ -8,9 +8,8 @@ import { useEffect, useRef, useState } from "react";
 import { ProductImage } from "@/components/product/product-image";
 import { Sheet } from "@/components/ui/sheet";
 import { brandName } from "@/data/brands";
-import { formatPrice } from "@/lib/format";
 import { useCatalog } from "@/lib/catalog/provider";
-import { productHref, searchProducts } from "@/lib/products";
+import { priceText, productHref, searchProducts } from "@/lib/products";
 
 const SUGGESTIONS = ["Travis Scott", "Off-White", "Corteiz", "NOCTA", "Kayano", "Prada"];
 
@@ -88,7 +87,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
                       <p className="label text-muted">{brandName(p.brand)}</p>
                       <p className="truncate group-hover:text-acc-ink">{p.name} · {p.colorway}</p>
                     </div>
-                    <span className="font-mono text-sm tabular-nums">{formatPrice(p.price)}</span>
+                    <span className="font-mono text-sm tabular-nums">{priceText(p)}</span>
                   </Link>
                 </li>
               ))}

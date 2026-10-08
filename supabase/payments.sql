@@ -55,10 +55,11 @@ $$;
 
 -- Ajoute (delta > 0) ou retire (delta < 0) des paires d'une pointure dans un
 -- état (p_condition) ; sans état (anciennes commandes) : la première ligne de
--- la pointure. Renvoie l'état de la ligne modifiée.
+-- la pointure. Renvoie la ligne de stock (état, prix propre à l'état…).
 drop function if exists public.adjust_stock(text, text, int);
+drop function if exists public.adjust_stock(text, text, int, text);
 create or replace function public.adjust_stock(p_slug text, p_size text, p_delta int, p_condition text default null)
-returns text
+returns jsonb
 language plpgsql
 security definer
 set search_path = public
@@ -66,16 +67,16 @@ as $$
 declare
   v_sizes jsonb;
   v_idx   int;
+  v_line  jsonb;
   v_stock int;
-  v_cond  text;
 begin
   select sizes into v_sizes from products where slug = p_slug for update;
   if v_sizes is null then
     raise exception 'unknown_product:%', p_slug;
   end if;
 
-  select (t.ord - 1)::int, coalesce((t.elem ->> 'stock')::int, 0), condition_code(t.elem)
-    into v_idx, v_stock, v_cond
+  select (t.ord - 1)::int, t.elem
+    into v_idx, v_line
     from jsonb_array_elements(v_sizes) with ordinality as t(elem, ord)
    where t.elem ->> 'size' = p_size
      and (nullif(p_condition, '') is null or condition_code(t.elem) = p_condition)
@@ -85,6 +86,7 @@ begin
   if v_idx is null then
     raise exception 'unknown_size:%:%', p_slug, p_size;
   end if;
+  v_stock := coalesce((v_line ->> 'stock')::int, 0);
   if v_stock + p_delta < 0 then
     raise exception 'out_of_stock:%:%', p_slug, p_size;
   end if;
@@ -92,7 +94,7 @@ begin
   update products
      set sizes = jsonb_set(sizes, array[v_idx::text, 'stock'], to_jsonb(v_stock + p_delta))
    where slug = p_slug;
-  return v_cond;
+  return v_line;
 end;
 $$;
 
@@ -162,7 +164,8 @@ declare
   v_item       jsonb;
   v_product    products;
   v_qty        int;
-  v_cond       text;
+  v_line       jsonb;
+  v_price      numeric(10, 2);
   v_lines      jsonb := '[]'::jsonb;
   v_subtotal   numeric(10, 2) := 0;
   v_shipping   numeric(10, 2);
@@ -194,7 +197,9 @@ begin
       raise exception 'unknown_product:%', v_item ->> 'slug';
     end if;
 
-    v_cond := adjust_stock(v_product.slug, v_item ->> 'size', -v_qty, v_item ->> 'condition');
+    v_line := adjust_stock(v_product.slug, v_item ->> 'size', -v_qty, v_item ->> 'condition');
+    -- prix lu en base : celui de l'état s'il en a un, sinon celui de l'article
+    v_price := coalesce((v_line ->> 'price')::numeric, v_product.price);
 
     v_lines := v_lines || jsonb_build_object(
       'slug', v_product.slug,
@@ -202,11 +207,11 @@ begin
       'brand', v_product.brand,
       'colorway', v_product.colorway,
       'size', v_item ->> 'size',
-      'condition', v_cond,
+      'condition', condition_code(v_line),
       'qty', v_qty,
-      'price', v_product.price
+      'price', v_price
     );
-    v_subtotal := v_subtotal + v_product.price * v_qty;
+    v_subtotal := v_subtotal + v_price * v_qty;
   end loop;
 
   v_shipping := case p_shipping

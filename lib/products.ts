@@ -2,6 +2,8 @@ import { brandName } from "@/data/brands";
 import { categoryOf } from "@/data/taxonomy";
 import type { Condition, Product, SizeOption } from "@/data/types";
 
+import { formatPrice } from "./format";
+
 export const findProduct = (products: Product[], slug: string) =>
   products.find((p) => p.slug === slug);
 
@@ -10,6 +12,22 @@ export const productHref = (slug: string) => `/produit/?p=${encodeURIComponent(s
 export const inStock = (p: Product) => p.sizes.filter((s) => s.stock > 0);
 
 export const totalStock = (p: Product) => p.sizes.reduce((n, s) => n + s.stock, 0);
+
+/** prix d'une ligne de stock : le sien s'il dépend de l'état, sinon celui de l'article */
+export const priceOf = (p: Product, o: SizeOption) => o.price ?? p.price;
+
+/** prix le plus bas et le plus haut des paires en stock (de toutes si tout est vendu) */
+export function priceSpan(p: Product) {
+  const lines = inStock(p).length ? inStock(p) : p.sizes;
+  const prices = lines.length ? lines.map((o) => priceOf(p, o)) : [p.price];
+  return { min: Math.min(...prices), max: Math.max(...prices) };
+}
+
+/** « 290 € », ou « dès 120 € » quand le prix dépend de l'état */
+export function priceText(p: Product) {
+  const { min, max } = priceSpan(p);
+  return min === max ? formatPrice(min) : `dès ${formatPrice(min)}`;
+}
 
 export type Availability = "available" | "last" | "soldout";
 

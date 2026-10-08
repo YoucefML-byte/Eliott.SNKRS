@@ -14,7 +14,7 @@ import type { Product, SizeOption } from "@/data/types";
 
 import { useCatalog } from "./catalog/provider";
 import { recordDemoOrder } from "./orders";
-import { conditionCode, findOption, findProduct } from "./products";
+import { conditionCode, findOption, findProduct, priceOf } from "./products";
 
 // Panier gardé dans le navigateur (localStorage). En mode démo, la commande est
 // aussi simulée ici ; en paiement réel, elle est créée par lib/payment.ts.
@@ -102,7 +102,7 @@ function resolve(lines: CartLine[], products: Product[]): ResolvedLine[] {
     const product = findProduct(products, l.slug);
     const option = product && findOption(product, l.size, l.condition);
     if (!product || !option) return [];
-    return [{ ...l, product, option, total: product.price * l.qty }];
+    return [{ ...l, product, option, total: priceOf(product, option) * l.qty }];
   });
 }
 

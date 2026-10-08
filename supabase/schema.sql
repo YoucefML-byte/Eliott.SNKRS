@@ -19,7 +19,8 @@ create table if not exists public.products (
   collab       text,
   price        numeric(10, 2) not null check (price >= 0),
   retail       numeric(10, 2),
-  -- [{ "size": "42,5", "condition": "Neuf" | "Occasion", "grade": 9, "stock": 1 }]
+  -- [{ "size": "42,5", "condition": "Neuf" | "Occasion", "grade": 9, "stock": 1, "price": 180 }]
+  -- une ligne par pointure et par état ; "price" seulement si le prix dépend de l'état
   sizes        jsonb not null default '[]'::jsonb,
   description  text not null default '',
   -- [{ "view": "side", "src": "https://…", "label": "Profil" }]

@@ -14,7 +14,16 @@ import type { Product } from "@/data/types";
 import { useCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
 import { useCatalog } from "@/lib/catalog/provider";
-import { availability, inStock, optionKey, related, sizeLabel } from "@/lib/products";
+import {
+  availability,
+  inStock,
+  optionKey,
+  priceOf,
+  priceSpan,
+  priceText,
+  related,
+  sizeLabel,
+} from "@/lib/products";
 import { cn } from "@/lib/utils";
 
 import { Price } from "./price";
@@ -33,6 +42,9 @@ export function ProductView({ product }: { product: Product }) {
   const option = product.sizes.find((s) => optionKey(s) === choice);
   const size = option?.size ?? null;
   const sizesInStock = new Set(available.map((s) => s.size)).size;
+  // le prix peut dépendre de l'état : celui de la paire choisie, sinon « dès … »
+  const span = priceSpan(product);
+  const pricesVary = new Set(product.sizes.map((s) => priceOf(product, s))).size > 1;
   const cat = categoryOf(product);
   const sub = subOf(product);
   // montres, sacs, accessoires : pas de pointure à choisir
@@ -86,7 +98,11 @@ export function ProductView({ product }: { product: Product }) {
           <p className="mt-3 text-lg text-muted">{product.colorway}</p>
 
           <div className="mt-6 flex items-end justify-between border-y border-line py-4">
-            <Price value={product.price} className="text-[28px] leading-none" />
+            <Price
+              value={option ? priceOf(product, option) : span.min}
+              from={!option && span.min !== span.max}
+              className="text-[28px] leading-none"
+            />
             <span className="label text-right leading-relaxed text-dim">
               {product.retail != null && <>Prix de sortie {formatPrice(product.retail)}<br /></>}
               {product.releaseYear != null && <>Sortie {product.releaseYear}</>}
@@ -101,7 +117,12 @@ export function ProductView({ product }: { product: Product }) {
                 {sizesInStock} pointure{sizesInStock > 1 ? "s" : ""} en stock
               </span>
             </div>
-            <SizeSelector sizes={product.sizes} value={choice} onChange={setChoice} />
+            <SizeSelector
+              sizes={product.sizes}
+              value={choice}
+              onChange={setChoice}
+              priceLabel={pricesVary ? (o) => formatPrice(priceOf(product, o)) : undefined}
+            />
             <p className="mt-3 min-h-5 text-sm text-muted" aria-live="polite">
               {option &&
                 `${sizeLabel(option)} · ${option.stock > 1 ? `${option.stock} paires` : "dernière paire"} ${
@@ -213,7 +234,9 @@ export function ProductView({ product }: { product: Product }) {
                 ? `${sizeText(option.size)} · ${option.condition === "Neuf" ? "Neuf" : `Occ. ${option.grade}/10`}`
                 : "Pointure ?"}
             </p>
-            <p className="font-mono text-sm tabular-nums text-muted">{formatPrice(product.price)}</p>
+            <p className="font-mono text-sm tabular-nums text-muted">
+              {option ? formatPrice(priceOf(product, option)) : priceText(product)}
+            </p>
           </div>
           <Button
             variant={size && !sold ? "primary" : "outline"}

@@ -63,6 +63,10 @@ Next.js (App Router), React, TypeScript, Tailwind CSS v4, structure shadcn/ui
 - Stock : pour chaque pointure cochée, l'admin choisit son état (neuf ou
   occasion /10, propre à chaque pointure) et le nombre de paires ; « + état »
   ajoute la même pointure dans un autre état (ex. un 42 neuf et un 42 en 6/10).
+  Dès que les paires ne sont pas toutes dans le même état, « Prix selon
+  l'état » permet un prix par état (vide = le prix de l'article). Le site
+  affiche alors « dès … € » et le prix de la paire choisie ; le paiement
+  utilise le prix enregistré en base.
   Pour une taille unique : l'état de l'article et la quantité.
 - Sur chaque fiche, chaque carte et dans `/admin`, l'admin voit **« Modifier »**
   (même formulaire, pré-rempli : prix, stock, photos…) et **« Supprimer »**.

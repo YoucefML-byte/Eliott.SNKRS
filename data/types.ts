@@ -39,6 +39,8 @@ export interface SizeOption {
   /** wear grade out of 10 for used pairs */
   grade?: number;
   stock: number;
+  /** price of this line when it differs by condition; absent = the article price */
+  price?: number;
 }
 
 /** caractéristiques propres à certaines catégories */

@@ -12,7 +12,7 @@ import { DEMO_ADMIN } from "@/lib/catalog/demo";
 import { useCatalog } from "@/lib/catalog/provider";
 import { categoryOf, sizeText } from "@/data/taxonomy";
 import { formatPrice } from "@/lib/format";
-import { inStock, productHref, sizeLabel } from "@/lib/products";
+import { inStock, priceOf, priceText, productHref, sizeLabel } from "@/lib/products";
 import { cn } from "@/lib/utils";
 
 import { OrdersPanel } from "./orders-panel";
@@ -106,7 +106,7 @@ function Dashboard() {
   const [tab, setTab] = useState<"stock" | "orders">("stock");
 
   return (
-    <div className="mx-auto grid max-w-[1100px] gap-8 px-4 pb-24 pt-10 md:px-8 md:pt-14">
+    <div className="mx-auto grid max-w-[1100px] grid-cols-1 gap-8 px-4 pb-24 pt-10 md:px-8 md:pt-14">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="label text-acc-ink">Espace admin · {admin?.email}</p>
@@ -184,7 +184,9 @@ function AdminRow({ product }: { product: Product }) {
   const available = inStock(product);
   const twice = (size: string) => available.filter((s) => s.size === size).length > 1;
   const sizes = available.map(
-    (s) => `${sizeText(s.size)}${twice(s.size) ? ` ${sizeLabel(s)}` : ""}${s.stock > 1 ? ` ×${s.stock}` : ""}`,
+    (s) =>
+      `${sizeText(s.size)}${twice(s.size) ? ` ${sizeLabel(s)}` : ""}${s.stock > 1 ? ` ×${s.stock}` : ""}` +
+      (s.price != null && s.price !== product.price ? ` (${formatPrice(priceOf(product, s))})` : ""),
   );
 
   const remove = async () => {
@@ -207,12 +209,12 @@ function AdminRow({ product }: { product: Product }) {
         <Link href={productHref(product.slug)} className="mt-0.5 block truncate font-medium hover:text-acc-ink">
           {product.name}
         </Link>
-        <p className="truncate text-sm text-muted">
+        <p className="line-clamp-2 text-sm text-muted">
           {categoryOf(product).label} · {sizes.length ? sizes.join(", ") : "vendu"}
         </p>
         {error && <p className="mt-1 text-sm text-destructive">{error}</p>}
       </div>
-      <span className="font-mono text-sm tabular-nums">{formatPrice(product.price)}</span>
+      <span className="font-mono text-sm tabular-nums">{priceText(product)}</span>
       {confirm ? (
         <span className="flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={() => setConfirm(false)} disabled={busy}>

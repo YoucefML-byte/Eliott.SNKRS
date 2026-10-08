@@ -26,7 +26,7 @@ import type { Condition, Product, ProductImage as Image, SizeOption } from "@/da
 import { preparePhoto } from "@/lib/catalog/images";
 import { useCatalog } from "@/lib/catalog/provider";
 import { sizeValue } from "@/lib/format";
-import { brandsOf, productHref } from "@/lib/products";
+import { brandsOf, conditionCodeLabel, conditionRank, productHref } from "@/lib/products";
 import { cn } from "@/lib/utils";
 
 // EU 35 → 48 in half sizes, written the French way ("42,5")
@@ -69,6 +69,9 @@ const CONDITION_VALUES = ["neuf", ...GRADES.map((g) => `occasion-${g}`)];
 const fromConditionValue = (v: string): Pick<SizeOption, "condition" | "grade"> =>
   v === "neuf" ? { condition: "Neuf", grade: undefined } : { condition: "Occasion", grade: Number(v.split("-")[1]) };
 
+const priceInput = (n: number) => String(n).replace(".", ",");
+const parsePrice = (v: string) => Number(v.trim().replace(",", "."));
+
 /** a stock line of the form: a size, its condition, its number of pairs */
 type Line = SizeOption & { id: string };
 const withId = (o: SizeOption): Line => ({ ...o, id: crypto.randomUUID() });
@@ -94,6 +97,15 @@ function ProductForm({ product, onDone }: { product: Product | null; onDone: () 
     () => product?.sizes.filter((s) => s.size !== ONE_SIZE).map(withId) ?? [],
   );
   const [oneQty, setOneQty] = useState(product?.sizes.find((s) => s.size === ONE_SIZE)?.stock ?? 1);
+  const [basePrice, setBasePrice] = useState(product ? priceInput(product.price) : "");
+  // prix selon l'état (« neuf », « occasion-6 »…) ; vide = le prix de l'article
+  const [conditionPrices, setConditionPrices] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      (product?.sizes ?? [])
+        .filter((o) => o.price != null && o.price !== product!.price)
+        .map((o) => [conditionValue(o), priceInput(o.price!)]),
+    ),
+  );
   const [dragging, setDragging] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -163,17 +175,30 @@ function ProductForm({ product, onDone }: { product: Product | null; onDone: () 
   };
   const lines = [...stock].sort((a, b) => sizeValue(a.size) - sizeValue(b.size));
   const total = cat.sized ? stock.reduce((n, o) => n + o.stock, 0) : oneQty;
+  // un prix par état dès que les paires ne sont pas toutes dans le même état
+  const usedConditions = [...new Set(lines.map(conditionValue))].sort((a, b) => conditionRank(a) - conditionRank(b));
+  const pricePerCondition =
+    cat.sized && (usedConditions.length > 1 || usedConditions.some((v) => conditionPrices[v]?.trim()));
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     const text = (k: string) => String(data.get(k) ?? "").trim();
-    const price = Number(text("price").replace(",", "."));
+    const price = parsePrice(text("price"));
+    const ownPrice = (o: Pick<SizeOption, "condition" | "grade">) => {
+      const raw = pricePerCondition ? conditionPrices[conditionValue(o)]?.trim() : "";
+      return raw ? parsePrice(raw) : undefined;
+    };
 
     if (!photos.length) return setError("Ajoute au moins une photo.");
     if (cat.sized && !stock.length) return setError("Choisis au moins une pointure.");
     if (!product && total === 0) return setError("Indique au moins une pièce en stock.");
     if (!(price > 0)) return setError("Indique un prix valide.");
+    const badPrice = usedConditions.find((v) => {
+      const own = ownPrice(fromConditionValue(v));
+      return own !== undefined && !(own > 0);
+    });
+    if (badPrice) return setError(`Indique un prix valide pour « ${conditionCodeLabel(badPrice)} ».`);
 
     setError(null);
     try {
@@ -195,7 +220,11 @@ function ProductForm({ product, onDone }: { product: Product | null; onDone: () 
         colorway: text("colorway"),
         price,
         sizes: cat.sized
-          ? lines.map((o) => ({ size: o.size, condition: o.condition, grade: o.grade, stock: o.stock }))
+          ? lines.map((o) => {
+              const own = ownPrice(o);
+              const line = { size: o.size, condition: o.condition, grade: o.grade, stock: o.stock };
+              return own !== undefined && own !== price ? { ...line, price: own } : line;
+            })
           : [oneSize],
         description: text("description"),
         photos: prepared,
@@ -369,13 +398,14 @@ function ProductForm({ product, onDone }: { product: Product | null; onDone: () 
               ))}
             </datalist>
           </Field>
-          <Field label="Prix (€)" htmlFor="price">
+          <Field label="Prix (€)" htmlFor="price" hint={pricePerCondition ? "Par défaut" : undefined}>
             <input
               id="price"
               name="price"
               required
               inputMode="decimal"
-              defaultValue={product ? String(product.price).replace(".", ",") : undefined}
+              value={basePrice}
+              onChange={(e) => setBasePrice(e.target.value)}
               placeholder="290"
               className={inputClass}
             />
@@ -578,6 +608,35 @@ function ProductForm({ product, onDone }: { product: Product | null; onDone: () 
                 <p className="mt-2 text-right font-mono text-xs text-muted">
                   {total} paire{total > 1 ? "s" : ""} en stock
                 </p>
+                {pricePerCondition && (
+                  <div className="mt-4 rounded-md border border-line p-3">
+                    <div className="mb-3 flex items-baseline justify-between gap-3">
+                      <span className="label text-ink">Prix selon l&apos;état</span>
+                      <span className="text-right text-xs text-dim">
+                        Vide = {basePrice ? `${basePrice} €` : "le prix ci-dessus"}
+                      </span>
+                    </div>
+                    <div className="grid gap-2">
+                      {usedConditions.map((v) => (
+                        <label key={v} className="flex items-center gap-3">
+                          <span className="w-32 shrink-0 text-sm">{conditionCodeLabel(v)}</span>
+                          <input
+                            aria-label={`Prix ${conditionCodeLabel(v)}`}
+                            inputMode="decimal"
+                            value={conditionPrices[v] ?? ""}
+                            onChange={(e) => {
+                              setConditionPrices((m) => ({ ...m, [v]: e.target.value }));
+                              setError(null);
+                            }}
+                            placeholder={basePrice || "290"}
+                            className={cn(inputClass, "h-10 min-w-0 flex-1")}
+                          />
+                          <span className="text-sm text-muted">€</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </Field>

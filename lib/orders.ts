@@ -7,7 +7,7 @@ import { SHIPPING } from "@/data/site";
 import type { Order } from "./cart";
 import { catalogBackend } from "./catalog";
 import { supabase } from "./catalog/supabase";
-import { conditionCode } from "./products";
+import { conditionCode, priceOf } from "./products";
 
 export type OrderStatus = "pending" | "paid" | "shipped" | "cancelled";
 
@@ -60,7 +60,7 @@ export function recordDemoOrder(o: Order) {
         size: l.size,
         condition: conditionCode(l.option),
         qty: l.qty,
-        price: l.product.price,
+        price: priceOf(l.product, l.option),
       })),
       subtotal: o.subtotal,
       shippingLabel: o.shipping.label,
