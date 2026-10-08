@@ -120,24 +120,22 @@ function ProductForm({ product, onDone }: { product: Product | null; onDone: () 
   const makeMain = (id: string) =>
     setPhotos((list) => [...list.filter((p) => p.id === id), ...list.filter((p) => p.id !== id)]);
 
-  const lineFor = (size: string, stock = 1): SizeOption => ({
-    size,
-    condition,
-    grade: condition === "Occasion" ? grade : undefined,
-    stock,
-  });
   const has = (size: string) => stock.some((o) => o.size === size);
+  // chaque pointure a son propre état ; une nouvelle pointure reprend celui de la dernière ajoutée
   const toggleSize = (size: string) =>
-    setStock((list) =>
-      list.some((o) => o.size === size) ? list.filter((o) => o.size !== size) : [...list, lineFor(size)],
-    );
+    setStock((list) => {
+      if (list.some((o) => o.size === size)) return list.filter((o) => o.size !== size);
+      const last = list.at(-1);
+      return [...list, { size, condition: last?.condition ?? "Neuf", grade: last?.grade, stock: 1 }];
+    });
   const setLine = (size: string, patch: Partial<SizeOption>) =>
     setStock((list) => list.map((o) => (o.size === size ? { ...o, ...patch } : o)));
-  // l'état choisi en haut s'applique à toutes les pointures
-  const applyCondition = (c: Condition, g: number) => {
-    setCondition(c);
-    setGrade(g);
-    setStock((list) => list.map((o) => ({ ...o, condition: c, grade: c === "Occasion" ? g : undefined })));
+  // taille unique : l'état est choisi pour l'article
+  const oneSize: SizeOption = {
+    size: ONE_SIZE,
+    condition,
+    grade: condition === "Occasion" ? grade : undefined,
+    stock: oneQty,
   };
   const lines = [...stock].sort((a, b) => sizeValue(a.size) - sizeValue(b.size));
   const total = cat.sized ? stock.reduce((n, o) => n + o.stock, 0) : oneQty;
@@ -172,7 +170,7 @@ function ProductForm({ product, onDone }: { product: Product | null; onDone: () 
         brand: text("brand"),
         colorway: text("colorway"),
         price,
-        sizes: cat.sized ? lines : [lineFor(ONE_SIZE, oneQty)],
+        sizes: cat.sized ? lines : [oneSize],
         description: text("description"),
         photos: prepared,
       };
@@ -432,47 +430,49 @@ function ProductForm({ product, onDone }: { product: Product | null; onDone: () 
           )}
         </div>
 
-        <Field label="État" hint={cat.sized && stock.length > 1 ? "S'applique à toutes les pointures" : undefined}>
-          <div className="grid grid-cols-2 rounded-md border border-line p-1" role="radiogroup" aria-label="État">
-            {(["Neuf", "Occasion"] as const).map((c) => (
-              <button
-                key={c}
-                type="button"
-                role="radio"
-                aria-checked={condition === c}
-                onClick={() => applyCondition(c, grade)}
-                className={cn(
-                  "h-10 rounded-sm text-sm transition-colors",
-                  condition === c ? "bg-raised text-ink" : "text-muted hover:text-ink",
-                )}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-          {condition === "Occasion" && (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="text-sm text-muted">Note</span>
-              {GRADES.map((g) => (
+        {!cat.sized && (
+          <Field label="État">
+            <div className="grid grid-cols-2 rounded-md border border-line p-1" role="radiogroup" aria-label="État">
+              {(["Neuf", "Occasion"] as const).map((c) => (
                 <button
-                  key={g}
+                  key={c}
                   type="button"
-                  aria-pressed={grade === g}
-                  onClick={() => applyCondition("Occasion", g)}
+                  role="radio"
+                  aria-checked={condition === c}
+                  onClick={() => setCondition(c)}
                   className={cn(
-                    "h-9 min-w-12 rounded-md border px-2 font-mono text-sm tabular-nums",
-                    grade === g ? "border-acc bg-acc text-on-acc" : "border-line text-muted hover:border-ink",
+                    "h-10 rounded-sm text-sm transition-colors",
+                    condition === c ? "bg-raised text-ink" : "text-muted hover:text-ink",
                   )}
                 >
-                  {g}/10
+                  {c}
                 </button>
               ))}
             </div>
-          )}
-        </Field>
+            {condition === "Occasion" && (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="text-sm text-muted">Note</span>
+                {GRADES.map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    aria-pressed={grade === g}
+                    onClick={() => setGrade(g)}
+                    className={cn(
+                      "h-9 min-w-12 rounded-md border px-2 font-mono text-sm tabular-nums",
+                      grade === g ? "border-acc bg-acc text-on-acc" : "border-line text-muted hover:border-ink",
+                    )}
+                  >
+                    {g}/10
+                  </button>
+                ))}
+              </div>
+            )}
+          </Field>
+        )}
 
         {cat.sized ? (
-          <Field label="Pointures et stock" hint="Touche une pointure, puis indique le nombre de paires">
+          <Field label="Pointures, état et stock" hint="Touche une pointure, puis choisis son état et le nombre de paires">
             <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-6">
               {SIZES.map((s) => (
                 <button
@@ -491,55 +491,63 @@ function ProductForm({ product, onDone }: { product: Product | null; onDone: () 
             </div>
             {lines.length > 0 && (
               <>
-                <ul className="mt-4 divide-y divide-line rounded-md border border-line" aria-label="Stock par pointure">
-                  {lines.map((o) => (
-                    <li key={o.size} className="flex items-center gap-2 py-2 pl-3 pr-1">
-                      <span className="w-12 shrink-0">
-                        <span className={cn("block font-mono text-sm tabular-nums", o.stock === 0 && "text-dim line-through")}>
-                          {o.size}
+                <div className="mt-4 rounded-md border border-line">
+                  <div className="label flex items-center gap-2 border-b border-line py-2 pl-3 pr-1 text-[10px] text-dim" aria-hidden>
+                    <span className="w-16 shrink-0">Pointure</span>
+                    <span className="flex-1">État</span>
+                    <span className="w-[98px] text-center">Paires</span>
+                    <span className="size-9 shrink-0" />
+                  </div>
+                  <ul className="divide-y divide-line" aria-label="Stock par pointure">
+                    {lines.map((o) => (
+                      <li key={o.size} className="flex items-center gap-2 py-2 pl-3 pr-1">
+                        <span className="w-16 shrink-0">
+                          <span className={cn("block font-mono text-sm tabular-nums", o.stock === 0 && "text-dim line-through")}>
+                            {o.size}
+                          </span>
+                          {o.stock === 0 && <span className="block text-[10px] uppercase text-dim">Épuisée</span>}
                         </span>
-                        {o.stock === 0 && <span className="block text-[10px] uppercase text-dim">Épuisée</span>}
-                      </span>
-                      <select
-                        aria-label={`État de la pointure ${o.size}`}
-                        value={conditionValue(o)}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setLine(
-                            o.size,
-                            v === "neuf"
-                              ? { condition: "Neuf", grade: undefined }
-                              : { condition: "Occasion", grade: Number(v.split("-")[1]) },
-                          );
-                        }}
-                        className="h-9 min-w-0 flex-1 rounded-md border border-line bg-surface px-2 text-sm text-ink outline-none focus:border-acc"
-                      >
-                        <option value="neuf">Neuf</option>
-                        {GRADES.map((g) => (
-                          <option key={g} value={`occasion-${g}`}>
-                            Occ. {g}/10
-                          </option>
-                        ))}
-                      </select>
-                      <QuantityStepper
-                        value={o.stock}
-                        min={0}
-                        max={MAX_QTY}
-                        onChange={(n) => setLine(o.size, { stock: n })}
-                        label={`Nombre de paires en ${o.size}`}
-                        maxTitle="Maximum atteint"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => toggleSize(o.size)}
-                        aria-label={`Retirer la pointure ${o.size}`}
-                        className="grid size-9 shrink-0 place-items-center rounded-md text-muted hover:bg-raised hover:text-ink"
-                      >
-                        <X className="size-4" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                        <select
+                          aria-label={`État de la pointure ${o.size}`}
+                          value={conditionValue(o)}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setLine(
+                              o.size,
+                              v === "neuf"
+                                ? { condition: "Neuf", grade: undefined }
+                                : { condition: "Occasion", grade: Number(v.split("-")[1]) },
+                            );
+                          }}
+                          className="h-9 min-w-0 flex-1 rounded-md border border-line bg-surface px-2 text-sm text-ink outline-none focus:border-acc"
+                        >
+                          <option value="neuf">Neuf</option>
+                          {GRADES.map((g) => (
+                            <option key={g} value={`occasion-${g}`}>
+                              Occ. {g}/10
+                            </option>
+                          ))}
+                        </select>
+                        <QuantityStepper
+                          value={o.stock}
+                          min={0}
+                          max={MAX_QTY}
+                          onChange={(n) => setLine(o.size, { stock: n })}
+                          label={`Nombre de paires en ${o.size}`}
+                          maxTitle="Maximum atteint"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => toggleSize(o.size)}
+                          aria-label={`Retirer la pointure ${o.size}`}
+                          className="grid size-9 shrink-0 place-items-center rounded-md text-muted hover:bg-raised hover:text-ink"
+                        >
+                          <X className="size-4" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
                 <p className="mt-2 text-right font-mono text-xs text-muted">
                   {total} paire{total > 1 ? "s" : ""} en stock
                 </p>

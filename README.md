@@ -60,8 +60,9 @@ Next.js (App Router), React, TypeScript, Tailwind CSS v4, structure shadcn/ui
   champs propres à la catégorie : pointures, modèle et genre (chaussures) ;
   mouvement, boîtier, bracelet, matière (montres) ; taille et matière
   (maroquinerie) ; matière (accessoires).
-- Stock : pour chaque pointure cochée, l'admin indique le nombre de paires
-  (et l'état de chaque pointure si besoin) ; pour une taille unique, la quantité.
+- Stock : pour chaque pointure cochée, l'admin choisit son état (neuf ou
+  occasion /10, propre à chaque pointure) et le nombre de paires ; pour une
+  taille unique, l'état de l'article et la quantité.
 - Sur chaque fiche, chaque carte et dans `/admin`, l'admin voit **« Modifier »**
   (même formulaire, pré-rempli : prix, stock, photos…) et **« Supprimer »**.
 
