@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description: "Sneakers, maroquinerie et accessoires, neufs et d'occasion : Jordan, Nike, Prada, Louis Vuitton et collabs, des pièces authentifiées, notées et expédiées sous 48 h.",
 };
 
-export const viewport: Viewport = { themeColor: "#ffffff" };
+export const viewport: Viewport = { themeColor: "#ebedea" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

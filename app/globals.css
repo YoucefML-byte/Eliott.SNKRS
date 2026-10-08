@@ -3,7 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Eliott SNKRS — fond blanc, vert néon de la marque en accent
+/* Eliott SNKRS — fond gris clair (légèrement teinté de vert), vert néon de la marque en accent
    (aplats uniquement ; le texte vert utilise --acc-ink), Oswald / IBM Plex. */
 @theme inline {
   --color-ground: var(--ground);
@@ -50,21 +50,22 @@
 }
 
 :root {
-  --ground: #ffffff;
-  --surface: #f5f6f4;
-  --raised: #eceeeb;
-  --line: #e2e5e2;
+  /* fond de page gris ; panneaux, champs et menus un ton plus clair */
+  --ground: #ebedea;
+  --surface: #f6f7f5;
+  --raised: #e0e3df;
+  --line: #d4d8d3;
   --ink: #0b100d;
-  --muted: #59645d;
-  --dim: #7c867f;
+  --muted: #525d56;
+  --dim: #646e67;
   /* neon brand green: fills only */
   --acc: #00fc54;
-  /* readable green for text on white */
-  --acc-ink: #007f2a;
+  /* readable green for text on the grey ground */
+  --acc-ink: #00752a;
   --on-acc: #04140a;
   --warm: #ffa043;
-  /* studio backdrop behind the sneakers */
-  --tile: #eceeeb;
+  /* studio backdrop behind the sneakers, a shade darker than the ground */
+  --tile: #e1e4e0;
   --tile-ink: #0b120d;
   color-scheme: light;
 }
