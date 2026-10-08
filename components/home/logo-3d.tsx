@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { LogoMark } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 
-// Le monogramme Eliott SNKRS en volume, qui tourne sur lui-même (three.js).
+// Le monogramme Eliott SNKRS en volume (three.js). Il tourne sur lui-même au
+// rythme du défilement : `progress` (0 → 1) correspond à un tour complet.
 // Tracés repris de LogoMark (viewBox 64) : trois barres vertes pleines et le
 // contour du « S », extrudés. three.js n'est chargé qu'à l'affichage ; en
 // attendant (ou sans WebGL) le logo plat reste visible.
@@ -26,7 +27,8 @@ const STROKES: Pt[][] = [
 ];
 const STROKE_WIDTH = 1.5;
 const DEPTH = 6;
-const TURN_SECONDS = 9;
+/** pose de départ (et d'arrivée, un tour plus loin) : de trois quarts */
+const START_ANGLE = -0.45;
 
 /** repère du logo (y vers le bas, centré en 32,30) → repère 3D (y vers le haut) */
 const toScene = ([x, y]: Pt): Pt => [x - 32, 30 - y];
@@ -61,9 +63,13 @@ function strokeOutline(points: Pt[], w: number): Pt[] {
   return [...left, ...right.reverse()];
 }
 
-export function Logo3D({ className }: { className?: string }) {
+export function Logo3D({ className, progress }: { className?: string; progress: () => number }) {
   const box = useRef<HTMLDivElement>(null);
   const [live, setLive] = useState(false);
+  const progressRef = useRef(progress);
+  useEffect(() => {
+    progressRef.current = progress;
+  });
 
   useEffect(() => {
     const el = box.current;
@@ -183,13 +189,15 @@ export function Logo3D({ className }: { className?: string }) {
 
       const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const clock = new THREE.Clock();
-      let angle = -0.45;
+      let angle = START_ANGLE + progressRef.current() * Math.PI * 2;
       let frame = 0;
       let visible = true;
 
       const draw = () => {
-        const dt = Math.min(clock.getDelta(), 0.05);
-        if (!still) angle += (dt * Math.PI * 2) / TURN_SECONDS;
+        clock.getDelta();
+        // suit le défilement, en douceur
+        const goal = START_ANGLE + progressRef.current() * Math.PI * 2;
+        angle += still ? goal - angle : (goal - angle) * 0.14;
         tilt.x += (target.x - tilt.x) * 0.06;
         tilt.y += (target.y - tilt.y) * 0.06;
         logo.rotation.set(-0.12 + tilt.x, angle + tilt.y, 0);
@@ -198,7 +206,7 @@ export function Logo3D({ className }: { className?: string }) {
       };
       const loop = () => {
         draw();
-        frame = still || !visible ? 0 : requestAnimationFrame(loop);
+        frame = visible ? requestAnimationFrame(loop) : 0;
       };
       // ne tourne que si le logo est à l'écran et l'onglet visible
       const io = new IntersectionObserver(([entry]) => {
