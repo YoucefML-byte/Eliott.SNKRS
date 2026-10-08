@@ -60,15 +60,18 @@ export function HomeHero() {
 
         {/* simple flèche : invite à faire défiler, s'efface dès que l'on défile */}
         <a
-          href="#suite"
-          aria-label="Défiler"
+          href="#categories"
+          onClick={(e) => {
+            e.preventDefault();
+            document.getElementById("categories")?.scrollIntoView({ behavior: "smooth" });
+          }}
+          aria-label="Voir les catégories"
           style={{ opacity: "calc(1 - var(--hero-progress, 0) * 5)" }}
           className="absolute bottom-14 left-1/2 grid size-10 -translate-x-1/2 place-items-center text-dim hover:text-ink"
         >
           <ArrowDown className="size-5 motion-safe:animate-bounce" />
         </a>
       </div>
-      <span id="suite" className="absolute bottom-0" />
     </section>
   );
 }

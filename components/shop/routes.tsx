@@ -20,6 +20,7 @@ import { brandsOf } from "@/lib/products";
 import { categoryCounts, subCounts } from "@/lib/shop";
 
 import { Breadcrumb } from "./breadcrumb";
+import { latestArrivals, NewArrivals } from "./new-arrivals";
 import { ShopView } from "./shop-view";
 
 /** /catalogue — tout le stock, toutes catégories */
@@ -56,6 +57,8 @@ export function CategoryRoute({ category, sub }: { category: CategoryId; sub?: s
   const subs = subCounts(products, category);
   const current = sub ? cat.subs.find((s) => s.id === sub) : undefined;
   if (current && !subs.some((s) => s.id === current.id)) subs.push({ ...current, count: 0 });
+  // page de la catégorie : ses nouveautés en premier
+  const latest = current ? [] : latestArrivals(products.filter((p) => categoryOf(p).id === category));
 
   return (
     <ShopView
@@ -71,6 +74,7 @@ export function CategoryRoute({ category, sub }: { category: CategoryId; sub?: s
       filters={cat.filters}
       emptyText={EMPTY_TEXT[category]}
       watermark={category === "chaussures" ? "nike" : undefined}
+      featured={latest.length > 0 ? <NewArrivals products={latest} /> : undefined}
     />
   );
 }

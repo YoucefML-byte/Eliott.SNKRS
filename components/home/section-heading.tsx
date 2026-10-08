@@ -7,7 +7,7 @@ export function SectionHeading({
   href,
   cta,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: ReactNode;
   href?: string;
   cta?: string;
@@ -15,8 +15,8 @@ export function SectionHeading({
   return (
     <div className="mb-8 flex items-end justify-between gap-6 md:mb-12">
       <div>
-        <p className="label text-acc-ink">{eyebrow}</p>
-        <h2 className="mt-3 font-display text-4xl font-medium uppercase leading-[0.95] tracking-tight md:text-6xl">
+        {eyebrow && <p className="label mb-3 text-acc-ink">{eyebrow}</p>}
+        <h2 className="font-display text-4xl font-medium uppercase leading-[0.95] tracking-tight md:text-6xl">
           {title}
         </h2>
       </div>

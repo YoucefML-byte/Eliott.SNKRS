@@ -55,6 +55,8 @@ export interface ShopViewProps {
   watermark?: BrandMarkId;
   /** paramètres de l'adresse à conserver, ex. "m=nike" sur une page marque */
   baseQuery?: string;
+  /** en tête de page, avant tout le stock (ex. les nouveautés d'une catégorie) ; masqué pendant une recherche ou un filtrage */
+  featured?: ReactNode;
 }
 
 const plural = (n: number) => `${n} article${n > 1 ? "s" : ""}`;
@@ -143,6 +145,15 @@ export function ShopView(props: ShopViewProps) {
             </form>
           )}
         </div>
+
+        {props.featured && !scopeEmpty && !state.q && n === 0 && (
+          <>
+            {props.featured}
+            <h2 className="mb-5 mt-10 font-display text-3xl font-medium uppercase tracking-tight md:mb-6 md:mt-14 md:text-4xl">
+              Tout le stock
+            </h2>
+          </>
+        )}
 
         {props.nav && props.nav.length > 1 && (
           <nav aria-label="Rayons" className="no-scrollbar -mx-4 mb-6 flex gap-2 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:px-0">

@@ -33,10 +33,3 @@ export const GRADES = [
   { grade: "8/10", score: 8, text: "Légères traces d'usage visibles de près : plis, micro-rayures." },
   { grade: "7/10", score: 7, text: "Portée régulièrement, nettoyée, défauts photographiés." },
 ];
-
-export const COLLABS = [
-  { name: "Travis Scott", query: "travis" },
-  { name: "Corteiz", query: "corteiz" },
-  { name: "NOCTA", query: "nocta" },
-  { name: "Off-White", query: "off-white" },
-];
