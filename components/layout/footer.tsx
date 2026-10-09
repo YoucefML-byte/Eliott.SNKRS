@@ -147,7 +147,7 @@ export function Footer() {
       {/* grand logotype */}
       <p
         aria-hidden="true"
-        className="pointer-events-none mt-10 select-none whitespace-nowrap bg-[linear-gradient(180deg,rgba(255,255,255,0.13),rgba(255,255,255,0))] bg-clip-text text-center font-display text-[16.5vw] font-semibold uppercase leading-[0.78] tracking-tight text-transparent"
+        className="pointer-events-none mt-10 select-none whitespace-nowrap bg-[linear-gradient(180deg,rgba(255,255,255,0.13),rgba(255,255,255,0))] bg-clip-text text-center font-display text-[13.5vw] font-semibold uppercase leading-[0.78] tracking-tight text-transparent"
       >
         Eliott snkrs
       </p>

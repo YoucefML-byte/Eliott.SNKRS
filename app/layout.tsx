@@ -1,24 +1,23 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans, Oswald } from "next/font/google";
+import { Inter } from "next/font/google";
 
 import { SiteShell } from "@/components/layout/site-shell";
 
 import "./globals.css";
 
-const oswald = Oswald({ variable: "--font-oswald", subsets: ["latin"], weight: ["400", "500", "600"] });
-const plexSans = IBM_Plex_Sans({ variable: "--font-plex-sans", subsets: ["latin"], weight: ["400", "500", "600"] });
-const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"], weight: ["400", "500", "600"] });
+// une seule police, classique et grasse, pour tout le site (titres, textes, prix)
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: { default: "Eliott SNKRS — Sneakers, maroquinerie et accessoires", template: "%s · Eliott SNKRS" },
   description: "Sneakers, maroquinerie et accessoires, neufs et d'occasion : Jordan, Nike, Prada, Louis Vuitton et collabs, des pièces authentifiées, notées et expédiées sous 48 h.",
 };
 
-export const viewport: Viewport = { themeColor: "#ebedea" };
+export const viewport: Viewport = { themeColor: "#b4b4b4" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="fr" className={`${oswald.variable} ${plexSans.variable} ${plexMono.variable}`}>
+    <html lang="fr" className={inter.variable}>
       <body>
         <SiteShell>{children}</SiteShell>
       </body>

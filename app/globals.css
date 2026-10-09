@@ -3,8 +3,8 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Eliott SNKRS — fond gris clair (légèrement teinté de vert), vert néon de la marque en accent
-   (aplats uniquement ; le texte vert utilise --acc-ink), Oswald / IBM Plex. */
+/* Eliott SNKRS — fond gris moyen neutre, vert néon de la marque en accent
+   (aplats uniquement ; le texte vert utilise --acc-ink), Inter en gras pour tout le texte. */
 @theme inline {
   --color-ground: var(--ground);
   --color-surface: var(--surface);
@@ -20,9 +20,16 @@
   --color-tile: var(--tile);
   --color-tile-ink: var(--tile-ink);
 
-  --font-display: var(--font-oswald), "Arial Narrow", sans-serif;
-  --font-sans: var(--font-plex-sans), "Segoe UI", system-ui, sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, Menlo, monospace;
+  /* une seule police classique ; les chiffres restent alignés (tabular-nums) */
+  --font-display: var(--font-inter), "Helvetica Neue", Arial, sans-serif;
+  --font-sans: var(--font-inter), "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-inter), "Helvetica Neue", Arial, sans-serif;
+
+  /* tout le texte en gras : chaque graisse est montée d'un cran */
+  --font-weight-normal: 600;
+  --font-weight-medium: 700;
+  --font-weight-semibold: 800;
+  --font-weight-bold: 800;
 
   /* shadcn tokens mapped onto the brand palette */
   --color-background: var(--ground);
@@ -50,22 +57,22 @@
 }
 
 :root {
-  /* fond de page gris ; panneaux, champs et menus un ton plus clair */
-  --ground: #ebedea;
-  --surface: #f6f7f5;
-  --raised: #e0e3df;
-  --line: #d4d8d3;
-  --ink: #0b100d;
-  --muted: #525d56;
-  --dim: #646e67;
+  /* fond de page gris moyen ; panneaux, champs et menus un ton plus clair */
+  --ground: #b4b4b4;
+  --surface: #c8c8c8;
+  --raised: #a7a7a7;
+  --line: #969696;
+  --ink: #0b0b0b;
+  --muted: #333333;
+  --dim: #3a3a3a;
   /* neon brand green: fills only */
   --acc: #00fc54;
   /* readable green for text on the grey ground */
-  --acc-ink: #00752a;
+  --acc-ink: #004418;
   --on-acc: #04140a;
   --warm: #ffa043;
-  /* studio backdrop behind the sneakers, a shade darker than the ground */
-  --tile: #e1e4e0;
+  /* studio backdrop behind the sneakers, a shade lighter than the ground */
+  --tile: #c2c2c2;
   --tile-ink: #0b120d;
   color-scheme: light;
 }
@@ -78,7 +85,7 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-ground font-sans text-ink antialiased;
+    @apply bg-ground font-sans font-normal text-ink antialiased;
   }
   :focus-visible {
     outline: 2px solid var(--acc);
@@ -93,7 +100,8 @@
 @utility label {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
-  letter-spacing: 0.14em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 

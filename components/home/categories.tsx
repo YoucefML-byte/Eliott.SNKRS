@@ -72,8 +72,8 @@ export function Categories() {
                 </div>
                 <h3
                   className={cn(
-                    // « Maroquinerie » doit tenir dans une demi-largeur de téléphone
-                    "relative font-display text-[clamp(19px,5.6vw,30px)] font-semibold uppercase leading-[0.9] tracking-tight md:text-5xl lg:text-[clamp(28px,3.1vw,48px)]",
+                    // « Maroquinerie » doit tenir dans la tuile, du téléphone au grand écran
+                    "relative font-display text-[clamp(15px,4.4vw,24px)] font-semibold uppercase leading-[0.95] tracking-tight [overflow-wrap:anywhere] md:text-[clamp(28px,4.6vw,40px)] lg:text-[clamp(20px,2.25vw,36px)]",
                     hero && "drop-shadow-[0_1px_16px_rgba(255,255,255,0.7)]",
                   )}
                 >
