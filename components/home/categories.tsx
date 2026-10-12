@@ -46,7 +46,7 @@ export function Categories() {
               <Link
                 key={c.id}
                 href={categoryHref(c.id)}
-                className="group relative flex aspect-[3/4] flex-col justify-between overflow-hidden rounded-md bg-tile p-4 text-tile-ink md:p-6"
+                className="group @container relative flex aspect-[3/4] flex-col justify-between overflow-hidden rounded-md bg-tile p-4 text-tile-ink md:p-6"
               >
                 {hero ? (
                   <>
@@ -72,8 +72,8 @@ export function Categories() {
                 </div>
                 <h3
                   className={cn(
-                    // « Maroquinerie » doit tenir dans la tuile, du téléphone au grand écran
-                    "relative font-display text-[clamp(15px,4.4vw,24px)] font-semibold uppercase leading-[0.95] tracking-tight [overflow-wrap:anywhere] md:text-[clamp(28px,4.6vw,40px)] lg:text-[clamp(20px,2.25vw,36px)]",
+                    // taille calée sur la largeur de la tuile : « Maroquinerie » tient sur une ligne, partout
+                    "relative whitespace-nowrap font-display text-[min(12cqw,44px)] font-semibold uppercase leading-[0.95] tracking-tight",
                     hero && "drop-shadow-[0_1px_16px_rgba(255,255,255,0.7)]",
                   )}
                 >
