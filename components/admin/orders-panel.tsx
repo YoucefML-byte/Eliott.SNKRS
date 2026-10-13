@@ -1,9 +1,11 @@
 "use client";
 
-import { Check, Package, Undo2 } from "lucide-react";
+import { Check, FileText, Package, Tag, Undo2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+
+import { OrderDocument, type DocKind } from "./order-documents";
 import { sizeText } from "@/data/taxonomy";
 import { formatPrice } from "@/lib/format";
 import { conditionCodeLabel } from "@/lib/products";
@@ -61,6 +63,7 @@ export function OrdersPanel() {
 function OrderCard({ order: o, onChange }: { order: AdminOrder; onChange: (id: string, shipped: boolean) => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [doc, setDoc] = useState<DocKind | null>(null);
   const shipped = o.status === "shipped";
 
   const toggle = async () => {
@@ -82,6 +85,7 @@ function OrderCard({ order: o, onChange }: { order: AdminOrder; onChange: (id: s
           <p className="font-mono text-sm">
             {o.number} <span className="text-muted">· {date(o.createdAt)} · {o.provider}</span>
           </p>
+          {o.invoiceNumber && <p className="font-mono text-xs text-muted">Facture {o.invoiceNumber}</p>}
           <p className="mt-1 font-medium">{o.customer.name}</p>
         </div>
         <span className="font-mono tabular-nums">{formatPrice(o.total)}</span>
@@ -116,7 +120,7 @@ function OrderCard({ order: o, onChange }: { order: AdminOrder; onChange: (id: s
         </p>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         {shipped ? (
           <>
             <span className="flex items-center gap-1.5 text-sm text-acc-ink">
@@ -131,8 +135,15 @@ function OrderCard({ order: o, onChange }: { order: AdminOrder; onChange: (id: s
             <Package className="size-4" /> {busy ? "…" : "Marquer expédiée"}
           </Button>
         )}
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        <Button size="sm" variant="outline" onClick={() => setDoc("slip")}>
+          <Tag className="size-4" /> Bordereau
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => setDoc("invoice")}>
+          <FileText className="size-4" /> Facture
+        </Button>
       </div>
+      {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
+      {doc && <OrderDocument order={o} kind={doc} onClose={() => setDoc(null)} />}
     </li>
   );
 }

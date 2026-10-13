@@ -111,3 +111,38 @@
     display: none;
   }
 }
+
+/* Factures et bordereaux (admin) : seule la feuille sort à l'impression */
+@media print {
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+  body:has(#print-root) > :not(#print-root) {
+    display: none !important;
+  }
+  #print-root {
+    position: static !important;
+    overflow: visible !important;
+    background: #fff !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  #print-root > :not(.no-print) {
+    padding: 0 !important;
+  }
+  #print-root .no-print {
+    display: none !important;
+  }
+  #print-root .paper {
+    max-width: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+}

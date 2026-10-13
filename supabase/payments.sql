@@ -40,6 +40,32 @@ drop policy if exists "L'admin met à jour les commandes" on public.orders;
 create policy "L'admin met à jour les commandes" on public.orders
   for update to authenticated using (public.is_admin()) with check (public.is_admin());
 
+-- Numéros de facture : la loi demande une suite continue, sans trou. Un
+-- compteur verrouillé ligne par ligne (et non une séquence, qui peut sauter
+-- des numéros) attribue F-2026-00001, F-2026-00002… au passage en « payée ».
+alter table public.orders add column if not exists invoice_number text unique;
+
+create table if not exists public.invoice_counter (
+  id   int primary key default 1 check (id = 1),
+  last int not null default 0
+);
+insert into public.invoice_counter (id, last) values (1, 0) on conflict (id) do nothing;
+alter table public.invoice_counter enable row level security;  -- aucun accès depuis le site
+
+create or replace function public.next_invoice_number()
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_last int;
+begin
+  update invoice_counter set last = last + 1 where id = 1 returning last into v_last;
+  return 'F-' || to_char(now() at time zone 'Europe/Paris', 'YYYY') || '-' || lpad(v_last::text, 5, '0');
+end;
+$$;
+
 -- 2. Stock -----------------------------------------------------------------
 -- État d'une ligne de stock en un mot : « neuf », « occasion-9 »… (comme
 -- conditionCode dans lib/products.ts). Une même pointure peut exister dans
@@ -271,11 +297,27 @@ begin
 
   if v_order.status in ('pending', 'cancelled') then
     update orders
-       set status = 'paid', paid_at = now(), provider_ref = coalesce(p_ref, provider_ref)
+       set status = 'paid', paid_at = now(), provider_ref = coalesce(p_ref, provider_ref),
+           invoice_number = coalesce(invoice_number, next_invoice_number())
      where id = p_order
     returning * into v_order;
   end if;
   return v_order;
+end;
+$$;
+
+-- Commandes payées avant l'arrivée des factures : numérotées dans l'ordre de paiement.
+do $$
+declare
+  v_id uuid;
+begin
+  for v_id in
+    select id from public.orders
+     where status in ('paid', 'shipped') and invoice_number is null
+     order by coalesce(paid_at, created_at)
+  loop
+    update public.orders set invoice_number = public.next_invoice_number() where id = v_id;
+  end loop;
 end;
 $$;
 
@@ -286,8 +328,10 @@ revoke all on function public.cancel_order(uuid) from public, anon, authenticate
 revoke all on function public.release_expired_orders() from public, anon, authenticated;
 revoke all on function public.create_order(jsonb, jsonb, text, text) from public, anon, authenticated;
 revoke all on function public.mark_order_paid(uuid, text) from public, anon, authenticated;
+revoke all on function public.next_invoice_number() from public, anon, authenticated;
 grant execute on function public.adjust_stock(text, text, int, text) to service_role;
 grant execute on function public.cancel_order(uuid) to service_role;
 grant execute on function public.release_expired_orders() to service_role;
 grant execute on function public.create_order(jsonb, jsonb, text, text) to service_role;
 grant execute on function public.mark_order_paid(uuid, text) to service_role;
+grant execute on function public.next_invoice_number() to service_role;

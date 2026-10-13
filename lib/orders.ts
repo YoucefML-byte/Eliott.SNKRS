@@ -17,20 +17,36 @@ export interface AdminOrder {
   status: OrderStatus;
   provider: string;
   createdAt: string;
+  /** date du paiement : date de la facture */
+  paidAt?: string;
+  /** F-2026-00001… attribué au paiement (suite continue, exigée pour les factures) */
+  invoiceNumber?: string;
   /** condition : « neuf », « occasion-6 »… (absente des commandes passées avant les états par pointure) */
-  items: { slug: string; name: string; size: string; condition?: string; qty: number; price: number }[];
+  items: { slug: string; name: string; colorway?: string; size: string; condition?: string; qty: number; price: number }[];
   subtotal: number;
   shippingLabel: string;
   shippingPrice: number;
   total: number;
-  customer: { name: string; email: string; phone: string; address: string };
+  /** address : sur une ligne ; street + cityLine : pour l'étiquette du colis */
+  customer: { name: string; email: string; phone: string; address: string; street: string; cityLine: string };
 }
+
+/** « 12 rue Oberkampf, 75011 Paris » → rue / code postal + ville */
+const splitAddress = (address: string) => {
+  const i = address.lastIndexOf(", ");
+  return i < 0 ? { street: address, cityLine: "" } : { street: address.slice(0, i), cityLine: address.slice(i + 2) };
+};
+
+const invoiceNumber = (n: number, at = new Date()) =>
+  `F-${at.toLocaleString("fr-FR", { timeZone: "Europe/Paris", year: "numeric" })}-${String(n).padStart(5, "0")}`;
 
 const DEMO_ORDERS = "eliott-demo-orders-v1";
 
 function readDemo(): AdminOrder[] {
   try {
-    return JSON.parse(localStorage.getItem(DEMO_ORDERS) ?? "[]") as AdminOrder[];
+    const list = JSON.parse(localStorage.getItem(DEMO_ORDERS) ?? "[]") as AdminOrder[];
+    // commandes simulées avant l'arrivée des factures et des étiquettes
+    return list.map((o) => ({ ...o, customer: { ...splitAddress(o.customer.address), ...o.customer } }));
   } catch {
     return [];
   }
@@ -47,16 +63,21 @@ function writeDemo(orders: AdminOrder[]) {
 /** Mode démo : garde la commande simulée pour l'onglet « Commandes » de l'admin. */
 export function recordDemoOrder(o: Order) {
   if (catalogBackend.mode !== "demo") return;
+  const previous = readDemo();
+  const now = new Date().toISOString();
   writeDemo([
     {
       id: o.number,
       number: o.number,
       status: "paid",
       provider: o.payment ?? "Carte",
-      createdAt: new Date().toISOString(),
+      createdAt: now,
+      paidAt: now,
+      invoiceNumber: invoiceNumber(previous.filter((p) => p.invoiceNumber).length + 1),
       items: o.lines.map((l) => ({
         slug: l.slug,
         name: l.product.name,
+        colorway: l.product.colorway,
         size: l.size,
         condition: conditionCode(l.option),
         qty: l.qty,
@@ -66,9 +87,9 @@ export function recordDemoOrder(o: Order) {
       shippingLabel: o.shipping.label,
       shippingPrice: o.shipping.price,
       total: o.total,
-      customer: { name: o.name, email: o.email, phone: o.phone ?? "", address: o.address },
+      customer: { name: o.name, email: o.email, phone: o.phone ?? "", address: o.address, ...splitAddress(o.address) },
     },
-    ...readDemo(),
+    ...previous,
   ]);
 }
 
@@ -78,6 +99,8 @@ interface Row {
   status: OrderStatus;
   provider: string;
   created_at: string;
+  paid_at: string | null;
+  invoice_number: string | null;
   items: AdminOrder["items"];
   subtotal: number | string;
   shipping_method: string;
@@ -94,6 +117,8 @@ const toOrder = (r: Row): AdminOrder => ({
   status: r.status,
   provider: PROVIDERS[r.provider] ?? r.provider,
   createdAt: r.created_at,
+  paidAt: r.paid_at ?? undefined,
+  invoiceNumber: r.invoice_number ?? undefined,
   items: r.items.map((i) => ({ ...i, price: Number(i.price) })),
   subtotal: Number(r.subtotal),
   shippingLabel: SHIPPING.find((s) => s.id === r.shipping_method)?.label ?? r.shipping_method,
@@ -104,6 +129,8 @@ const toOrder = (r: Row): AdminOrder => ({
     email: r.customer.email,
     phone: r.customer.phone,
     address: `${r.customer.address}, ${r.customer.zip} ${r.customer.city}`,
+    street: r.customer.address,
+    cityLine: `${r.customer.zip} ${r.customer.city}`,
   },
 });
 

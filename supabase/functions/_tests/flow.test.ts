@@ -297,6 +297,38 @@ Deno.test({
         assertEquals(bad.status, 400);
       });
 
+      await t.step("factures : numéros continus pour les commandes payées, et seulement elles", async () => {
+        const year = new Date().toLocaleString("fr-FR", { timeZone: "Europe/Paris", year: "numeric" });
+        const rows = (await env.pgrest.query(
+          "select status, invoice_number from orders order by paid_at nulls last, created_at",
+        )).rows as { status: string; invoice_number: string | null }[];
+        const paid = rows.filter((r) => r.status === "paid" || r.status === "shipped");
+        assert(paid.length >= 3);
+        assertEquals(
+          paid.map((r) => r.invoice_number),
+          paid.map((_, i) => `F-${year}-${String(i + 1).padStart(5, "0")}`),
+          "F-année-00001, 00002… dans l'ordre de paiement, sans trou",
+        );
+        assert(rows.filter((r) => !paid.includes(r)).every((r) => r.invoice_number === null), "pas de facture sans paiement");
+
+        // relancer payments.sql (mise à jour du site) ne renumérote rien
+        await env.pgrest.query(await Deno.readTextFile(new URL("../../payments.sql", import.meta.url)));
+        const again = (await env.pgrest.query(
+          "select invoice_number from orders where invoice_number is not null order by invoice_number",
+        )).rows.map((r: { invoice_number: string }) => r.invoice_number);
+        assertEquals(again, paid.map((r) => r.invoice_number).sort());
+
+        // commande payée avant les factures : numérotée au prochain passage du script
+        const legacy = paid[0].invoice_number;
+        await env.pgrest.query("update orders set invoice_number = null where invoice_number = $1", [legacy]);
+        await env.pgrest.query(await Deno.readTextFile(new URL("../../payments.sql", import.meta.url)));
+        const next = `F-${year}-${String(paid.length + 1).padStart(5, "0")}`;
+        assertEquals(
+          (await env.pgrest.query("select count(*)::int n from orders where invoice_number = $1", [next])).rows[0].n,
+          1,
+        );
+      });
+
       await t.step("le navigateur ne peut pas lire les commandes", async () => {
         await env.pgrest.query("set role anon");
         assert((await env.pgrest.query("select count(*)::int n from orders")).rows[0].n === 0);
