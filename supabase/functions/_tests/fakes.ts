@@ -19,6 +19,9 @@ export function fakeProviders(passthrough: typeof fetch = fetch) {
   let n = 0;
   let stripeDown = false;
   let captureAmountOverride: string | null = null;
+  // deno-lint-ignore no-explicit-any -- e-mails reçus par le faux Brevo
+  const mails: Record<string, any>[] = [];
+  let brevoDown = false;
 
   // deno-lint-ignore require-await
   const fetchFn: typeof fetch = async (input, init = {}) => {
@@ -106,6 +109,14 @@ export function fakeProviders(passthrough: typeof fetch = fetch) {
       return ok({ id: o.id, status: o.status, purchase_units: o.purchase_units });
     }
 
+    if (url.hostname === "api.brevo.com") {
+      calls.push({ method, url: url.href, headers, body });
+      if (headers.get("api-key") !== "xkeysib-test") return ok({ code: "unauthorized" }, 401);
+      if (brevoDown) return ok({ code: "internal_error" }, 500);
+      mails.push(JSON.parse(body));
+      return ok({ messageId: `<${mails.length}@brevo>` }, 201);
+    }
+
     return passthrough(input, init);
   };
 
@@ -114,6 +125,7 @@ export function fakeProviders(passthrough: typeof fetch = fetch) {
     calls,
     sessions,
     paypalOrders,
+    mails,
     /** le client paie sur la page Stripe */
     payStripe(id: string) {
       Object.assign(sessions.get(id)!, { status: "complete", payment_status: "paid" });
@@ -128,6 +140,9 @@ export function fakeProviders(passthrough: typeof fetch = fetch) {
     },
     set captureAmount(v: string | null) {
       captureAmountOverride = v;
+    },
+    set brevoDown(v: boolean) {
+      brevoDown = v;
     },
   };
 }

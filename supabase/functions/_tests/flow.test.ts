@@ -11,6 +11,7 @@ import { handleConfirmOrder } from "../confirm-order/handler.ts";
 import { restDb } from "../_shared/db.ts";
 import type { Deps } from "../_shared/deps.ts";
 import { stripeSignature } from "../_shared/stripe.ts";
+import { handleShipOrder } from "../ship-order/handler.ts";
 import { handleStripeWebhook } from "../stripe-webhook/handler.ts";
 import { fakePostgrest } from "./fake-postgrest.ts";
 import { fakeProviders } from "./fakes.ts";
@@ -23,6 +24,9 @@ const WHSEC = "whsec_test_secret";
 const AJ = "air-jordan-1-low-travis-scott-reverse-mocha"; // 1190 €
 const NB = "new-balance-2002r-protection-pack-pink"; // 219 €, EU 38 et 40
 const ASICS = "asics-gel-kayano-14-black-silver"; // 189 €, EU 40,5 / 42 / 43
+const ADMIN = "11111111-1111-4111-8111-111111111111";
+const VISITOR = "22222222-2222-4222-8222-222222222222";
+const TOKENS: Record<string, string> = { "jeton-admin": ADMIN, "jeton-visiteur": VISITOR };
 const CUSTOMER = {
   email: "client@exemple.fr",
   phone: "0600000000",
@@ -52,8 +56,18 @@ async function setup() {
     stripeKey: "sk_test_123",
     stripeWebhookSecret: WHSEC,
     paypal: { clientId: "pp-id", secret: "pp-secret", env: "sandbox" },
+    mail: { apiKey: "xkeysib-test", from: "commandes@eliott-snkrs.fr", fromName: "Eliott SNKRS" },
+    userFromToken: (jwt) => Promise.resolve(TOKENS[jwt] ?? null),
     nowSec: () => now,
   };
+  await pgrest.query(
+    "insert into auth.users (id, email) values ($1, 'eliott@exemple.fr'), ($2, 'curieux@exemple.fr')",
+    [
+      ADMIN,
+      VISITOR,
+    ],
+  );
+  await pgrest.query("insert into public.admins (user_id) values ($1)", [ADMIN]);
   const stock = async (slug: string, size: string) =>
     (await pgrest.query(
       `select (e->>'stock')::int s from products, jsonb_array_elements(sizes) e where slug=$1 and e->>'size'=$2`,
@@ -85,7 +99,18 @@ async function setup() {
       deps,
     );
   };
-  return { pgrest, fakes, deps, stock, status, checkout, confirm, webhook, setNow: (s: number) => (now = s) };
+  const ship = async (token: string | null, body: unknown) => {
+    const res = await handleShipOrder(
+      new Request("https://fn/ship-order", {
+        method: "POST",
+        headers: { origin: ORIGIN, ...(token ? { authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify(body),
+      }),
+      deps,
+    );
+    return { res, body: await res.json() };
+  };
+  return { pgrest, fakes, deps, stock, status, checkout, confirm, webhook, ship, setNow: (s: number) => (now = s) };
 }
 
 Deno.test({
@@ -309,7 +334,10 @@ Deno.test({
           paid.map((_, i) => `F-${year}-${String(i + 1).padStart(5, "0")}`),
           "F-année-00001, 00002… dans l'ordre de paiement, sans trou",
         );
-        assert(rows.filter((r) => !paid.includes(r)).every((r) => r.invoice_number === null), "pas de facture sans paiement");
+        assert(
+          rows.filter((r) => !paid.includes(r)).every((r) => r.invoice_number === null),
+          "pas de facture sans paiement",
+        );
 
         // relancer payments.sql (mise à jour du site) ne renumérote rien
         await env.pgrest.query(await Deno.readTextFile(new URL("../../payments.sql", import.meta.url)));
@@ -327,6 +355,77 @@ Deno.test({
           (await env.pgrest.query("select count(*)::int n from orders where invoice_number = $1", [next])).rows[0].n,
           1,
         );
+      });
+
+      await t.step("expédition : seul l'admin connecté, e-mail envoyé une seule fois", async () => {
+        const { fakes, ship } = env;
+        await env.pgrest.query("select adjust_stock($1, '42', 1)", [ASICS]); // la 42 est partie plus haut
+        const { body } = await checkout([{ slug: ASICS, size: "42", qty: 1 }], "stripe", "colissimo");
+        const id = body.order.id;
+        // pas encore payée : refusé
+        assertEquals((await ship("jeton-admin", { order: id })).res.status, 409);
+        fakes.payStripe(([...fakes.sessions.values()].at(-1) as { id: string }).id);
+        await confirm(id);
+
+        assertEquals((await ship(null, { order: id })).res.status, 401, "sans connexion");
+        assertEquals((await ship("jeton-inconnu", { order: id })).res.status, 401, "jeton invalide");
+        assertEquals((await ship("jeton-visiteur", { order: id })).res.status, 403, "connecté mais pas admin");
+        assertEquals(await status(id), "paid");
+        assertEquals((await ship("jeton-admin", { order: id, tracking: "<script>" })).res.status, 400);
+
+        const sent = fakes.mails.length;
+        const r = await ship("jeton-admin", { order: id, tracking: "6A12345678901" });
+        assertEquals(r.res.status, 200);
+        assertEquals(r.res.headers.get("access-control-allow-origin"), ORIGIN);
+        assertEquals([r.body.order.status, r.body.order.trackingNumber, r.body.email], [
+          "shipped",
+          "6A12345678901",
+          "sent",
+        ]);
+        assertEquals(await status(id), "shipped");
+        assertEquals(fakes.mails.length, sent + 1);
+        const mail = fakes.mails.at(-1)!;
+        assertEquals(mail.to, [{ email: CUSTOMER.email, name: "Camille Martin" }]);
+        assertEquals(mail.sender, { email: "commandes@eliott-snkrs.fr", name: "Eliott SNKRS" });
+        assertMatch(mail.subject, /^Ta commande ES-[0-9A-F]{8} est en route$/);
+        assertMatch(mail.htmlContent, /laposte\.fr\/outils\/suivre-vos-envois\?code=6A12345678901/);
+        assertMatch(mail.textContent, /Gel-Kayano 14 \(EU 42 · Neuf\)/);
+
+        // cliqué deux fois : pas de second e-mail
+        const again = await ship("jeton-admin", { order: id });
+        assertEquals([again.body.order.trackingNumber, again.body.email], ["6A12345678901", "already_sent"]);
+        assertEquals(fakes.mails.length, sent + 1);
+
+        // annulé puis ré-expédié : toujours un seul e-mail
+        const undo = await ship("jeton-admin", { order: id, shipped: false });
+        assertEquals([undo.body.order.status, undo.body.email], ["paid", undefined]);
+        assertEquals((await ship("jeton-admin", { order: id })).body.email, "already_sent");
+        assertEquals(fakes.mails.length, sent + 1);
+      });
+
+      await t.step("expédition : Brevo en panne ou absent → expédiée quand même, l'admin est prévenu", async () => {
+        const { fakes, ship } = env;
+        const paidOrder = async () => {
+          await env.pgrest.query("select adjust_stock($1, '43', 1)", [ASICS]);
+          const { body } = await checkout([{ slug: ASICS, size: "43", qty: 1 }], "stripe");
+          fakes.payStripe(([...fakes.sessions.values()].at(-1) as { id: string }).id);
+          await confirm(body.order.id);
+          return body.order.id as string;
+        };
+        const a = await paidOrder();
+        fakes.brevoDown = true;
+        const failed = await ship("jeton-admin", { order: a });
+        fakes.brevoDown = false;
+        assertEquals([failed.body.order.status, failed.body.email], ["shipped", "failed"]);
+        // un nouvel essai envoie l'e-mail qui n'est pas parti
+        assertEquals((await ship("jeton-admin", { order: a })).body.email, "sent");
+
+        await env.pgrest.query("update orders set status = 'paid', shipped_email_at = null where id = $1", [a]);
+        const saved = env.deps.mail;
+        env.deps.mail = undefined;
+        const off = await ship("jeton-admin", { order: a });
+        env.deps.mail = saved;
+        assertEquals([off.body.order.status, off.body.email], ["shipped", "not_configured"]);
       });
 
       await t.step("le navigateur ne peut pas lire les commandes", async () => {

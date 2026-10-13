@@ -120,8 +120,11 @@ Comment ça marche :
 4. Paiement abandonné ou annulé : la réservation est levée et les paires reviennent en vente.
 
 Eliott retrouve les commandes payées (adresse, téléphone, pointure) dans
-**/admin → Commandes** et les marque « expédiées ». Les remboursements se font
-depuis le tableau de bord Stripe ou PayPal.
+**/admin → Commandes** : il y imprime la facture et le bordereau du colis, puis
+la marque « expédiée » avec le numéro de suivi s'il l'a. L'acheteur reçoit alors
+l'e-mail « Ta commande est en route », avec le lien de suivi du transporteur
+(fonction `ship-order`, envoi par Brevo, une seule fois par commande). Les
+remboursements se font depuis le tableau de bord Stripe ou PayPal.
 
 ### Mise en route (à faire une fois, d'abord en mode test)
 
@@ -148,6 +151,15 @@ depuis le tableau de bord Stripe ou PayPal.
    | `PAYPAL_CLIENT_ID` / `PAYPAL_SECRET` | identifiants de l'app PayPal |
    | `PAYPAL_ENV` | `sandbox` pour tester, `live` en production |
    | `ALLOWED_ORIGINS` | (optionnel) autres adresses autorisées, ex. `http://localhost:3000` |
+   | `BREVO_API_KEY` | clé API Brevo (`xkeysib-…`) pour l'e-mail d'expédition |
+   | `MAIL_FROM` | adresse d'expédition validée dans Brevo (*Senders*) |
+   | `MAIL_FROM_NAME` | (optionnel) nom affiché, par défaut « Eliott SNKRS » |
+   | `MAIL_REPLY_TO` | (optionnel) adresse qui reçoit les réponses des clients |
+
+   E-mails : créer un compte gratuit sur https://www.brevo.com (300 e-mails/jour),
+   *Senders, Domains & Dedicated IPs → Senders* : ajouter et valider l'adresse
+   d'expédition, puis *SMTP & API → API Keys* : créer la clé. Sans ces secrets,
+   les commandes passent quand même en « expédiée », sans e-mail (l'admin le voit).
 
 5. **Déployer les fonctions** : sur GitHub, *Settings → Secrets and variables → Actions* :
    secret `SUPABASE_ACCESS_TOKEN` (supabase.com → Account → Access Tokens) et variable

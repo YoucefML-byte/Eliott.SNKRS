@@ -306,6 +306,56 @@ begin
 end;
 $$;
 
+-- Expédition : l'admin marque la commande expédiée (avec un n° de suivi
+-- facultatif) depuis le site, via la fonction ship-order ; l'acheteur reçoit
+-- un e-mail une seule fois (shipped_email_at).
+alter table public.orders add column if not exists tracking_number text;
+alter table public.orders add column if not exists shipped_email_at timestamptz;
+
+create or replace function public.mark_order_shipped(p_user uuid, p_order uuid, p_shipped boolean, p_tracking text)
+returns public.orders
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_order orders;
+begin
+  if not exists (select 1 from admins where user_id = p_user) then
+    raise exception 'forbidden';
+  end if;
+  select * into v_order from orders where id = p_order for update;
+  if not found then
+    raise exception 'unknown_order';
+  end if;
+  if v_order.status not in ('paid', 'shipped') then
+    raise exception 'invalid_status';
+  end if;
+
+  if p_shipped then
+    update orders
+       set status = 'shipped',
+           shipped_at = coalesce(shipped_at, now()),
+           tracking_number = coalesce(nullif(btrim(p_tracking), ''), tracking_number)
+     where id = p_order
+    returning * into v_order;
+  else
+    update orders set status = 'paid', shipped_at = null where id = p_order
+    returning * into v_order;
+  end if;
+  return v_order;
+end;
+$$;
+
+create or replace function public.mark_shipping_email_sent(p_order uuid)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update orders set shipped_email_at = now() where id = p_order;
+$$;
+
 -- Commandes payées avant l'arrivée des factures : numérotées dans l'ordre de paiement.
 do $$
 declare
@@ -329,9 +379,13 @@ revoke all on function public.release_expired_orders() from public, anon, authen
 revoke all on function public.create_order(jsonb, jsonb, text, text) from public, anon, authenticated;
 revoke all on function public.mark_order_paid(uuid, text) from public, anon, authenticated;
 revoke all on function public.next_invoice_number() from public, anon, authenticated;
+revoke all on function public.mark_order_shipped(uuid, uuid, boolean, text) from public, anon, authenticated;
+revoke all on function public.mark_shipping_email_sent(uuid) from public, anon, authenticated;
 grant execute on function public.adjust_stock(text, text, int, text) to service_role;
 grant execute on function public.cancel_order(uuid) to service_role;
 grant execute on function public.release_expired_orders() to service_role;
 grant execute on function public.create_order(jsonb, jsonb, text, text) to service_role;
 grant execute on function public.mark_order_paid(uuid, text) to service_role;
 grant execute on function public.next_invoice_number() to service_role;
+grant execute on function public.mark_order_shipped(uuid, uuid, boolean, text) to service_role;
+grant execute on function public.mark_shipping_email_sent(uuid) to service_role;

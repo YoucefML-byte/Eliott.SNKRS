@@ -44,6 +44,9 @@ export interface OrderRow {
   reserved_until: string;
   created_at: string;
   paid_at: string | null;
+  shipped_at?: string | null;
+  tracking_number?: string | null;
+  shipped_email_at?: string | null;
 }
 
 export interface Db {
@@ -52,6 +55,9 @@ export interface Db {
   setProviderRef(id: string, ref: string): Promise<void>;
   markPaid(id: string, ref: string | null): Promise<OrderRow>;
   cancel(id: string): Promise<void>;
+  /** passe la commande en « expédiée » (ou l'inverse) ; refusé si `user` n'est pas admin */
+  markShipped(user: string, id: string, shipped: boolean, tracking: string): Promise<OrderRow>;
+  markShippingEmailSent(id: string): Promise<void>;
 }
 
 /** Erreur levée par une fonction SQL, ex. « out_of_stock:slug:42 ». */
@@ -112,6 +118,19 @@ export function restDb(url: string, key: string, fetchFn: Fetch = fetch): Db {
     },
     async cancel(id) {
       await rpc("cancel_order", { p_order: id });
+    },
+    async markShipped(user, id, shipped, tracking) {
+      return num(
+        await rpc<OrderRow>("mark_order_shipped", {
+          p_user: user,
+          p_order: id,
+          p_shipped: shipped,
+          p_tracking: tracking,
+        }),
+      );
+    },
+    async markShippingEmailSent(id) {
+      await rpc("mark_shipping_email_sent", { p_order: id });
     },
   };
 }

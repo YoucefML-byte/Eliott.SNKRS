@@ -1,7 +1,8 @@
-import { assert, assertEquals, assertThrows } from "@std/assert";
+import { assert, assertEquals, assertMatch, assertThrows } from "@std/assert";
 
 import type { OrderRow } from "../_shared/db.ts";
 import { allowedOrigins, corsHeaders, HttpError } from "../_shared/http.ts";
+import { shippedEmail, trackingUrl } from "../_shared/mail.ts";
 import { lineLabel, parseCheckout } from "../_shared/orders.ts";
 import { paypalOrderBody } from "../_shared/paypal.ts";
 import { checkoutSessionParams, stripeSignature, verifyStripeSignature } from "../_shared/stripe.ts";
@@ -148,4 +149,57 @@ Deno.test("libellé des lignes : pointure et état", () => {
     "Dunk Low — EU 42 · Occasion 6/10",
   );
   assertEquals(lineLabel({ name: "Speedy 25", size: "TU" }), "Speedy 25 — Taille unique");
+});
+
+const CUSTOMER_MAIL = {
+  email: "client@exemple.fr",
+  phone: "0600000000",
+  firstName: "Camille",
+  lastName: "Martin",
+  address: "12 rue Oberkampf",
+  zip: "75011",
+  city: "Paris",
+};
+
+Deno.test("e-mail d'expédition : suivi par transporteur, rien d'injecté", () => {
+  const base = {
+    number: "ES-1A2B3C4D",
+    items: [{
+      slug: "x",
+      name: "Dunk <b>Low</b>",
+      brand: "Nike",
+      colorway: "Panda",
+      size: "42",
+      condition: "occasion-8",
+      qty: 1,
+      price: 120,
+    }],
+    customer: { ...CUSTOMER_MAIL, firstName: "<img src=x onerror=alert(1)>" },
+  };
+  const order = (shipping_method: string, tracking_number: string | null) =>
+    ({ ...base, shipping_method, tracking_number }) as unknown as OrderRow;
+
+  assertEquals(
+    trackingUrl(order("colissimo", "6A123")),
+    "https://www.laposte.fr/outils/suivre-vos-envois?code=6A123",
+  );
+  assertEquals(
+    trackingUrl(order("express", "XY987FR")),
+    "https://www.chronopost.fr/tracking-no-cms/suivi-page?listeNumerosLT=XY987FR",
+  );
+  assertMatch(trackingUrl(order("relais", "12345678"))!, /NumeroExpedition=12345678&CodePostal=75011$/);
+  assertEquals(trackingUrl(order("colissimo", null)), null);
+
+  const m = shippedEmail(order("relais", "12345678"), "https://eliott-snkrs.fr");
+  assertEquals(m.subject, "Ta commande ES-1A2B3C4D est en route");
+  assert(!m.html.includes("<img src=x"), "prénom échappé");
+  assert(!m.html.includes("<b>Low</b>"), "nom d'article échappé");
+  assertMatch(m.html, /Dunk &lt;b&gt;Low&lt;\/b&gt;/);
+  assertMatch(m.html, /Mondial Relay/);
+  assertMatch(m.text, /EU 42 · Occasion 8\/10/);
+  assertMatch(m.text, /Numéro de suivi : 12345678/);
+
+  const none = shippedEmail(order("colissimo", null), "https://eliott-snkrs.fr");
+  assert(!none.html.includes("Suivre mon colis"), "pas de bouton sans numéro");
+  assert(!/Numéro de suivi/.test(none.text));
 });

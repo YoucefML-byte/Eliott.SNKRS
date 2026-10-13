@@ -12,3 +12,8 @@ verify_jwt = false
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+# Appelée par l'espace admin : la fonction vérifie elle-même le jeton de
+# l'admin connecté auprès de Supabase Auth, puis son droit dans `admins`.
+[functions.ship-order]
+verify_jwt = false

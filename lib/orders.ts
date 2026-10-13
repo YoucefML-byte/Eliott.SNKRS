@@ -21,6 +21,9 @@ export interface AdminOrder {
   paidAt?: string;
   /** F-2026-00001… attribué au paiement (suite continue, exigée pour les factures) */
   invoiceNumber?: string;
+  trackingNumber?: string;
+  /** l'e-mail « Ta commande est en route » est parti à cette date */
+  shippedEmailAt?: string;
   /** condition : « neuf », « occasion-6 »… (absente des commandes passées avant les états par pointure) */
   items: { slug: string; name: string; colorway?: string; size: string; condition?: string; qty: number; price: number }[];
   subtotal: number;
@@ -101,6 +104,8 @@ interface Row {
   created_at: string;
   paid_at: string | null;
   invoice_number: string | null;
+  tracking_number: string | null;
+  shipped_email_at: string | null;
   items: AdminOrder["items"];
   subtotal: number | string;
   shipping_method: string;
@@ -119,6 +124,8 @@ const toOrder = (r: Row): AdminOrder => ({
   createdAt: r.created_at,
   paidAt: r.paid_at ?? undefined,
   invoiceNumber: r.invoice_number ?? undefined,
+  trackingNumber: r.tracking_number ?? undefined,
+  shippedEmailAt: r.shipped_email_at ?? undefined,
   items: r.items.map((i) => ({ ...i, price: Number(i.price) })),
   subtotal: Number(r.subtotal),
   shippingLabel: SHIPPING.find((s) => s.id === r.shipping_method)?.label ?? r.shipping_method,
@@ -148,16 +155,36 @@ export async function listOrders(): Promise<AdminOrder[]> {
   return (data as Row[]).map(toOrder);
 }
 
-export async function markShipped(id: string, shipped: boolean): Promise<void> {
+/** sent : parti · already_sent : déjà envoyé · not_configured : Brevo absent · failed : refusé · demo : mode démo */
+export type ShipEmail = "sent" | "already_sent" | "not_configured" | "failed" | "demo";
+
+/**
+ * Marque la commande expédiée (ou annule). En ligne, passe par la fonction
+ * ship-order, qui envoie aussi à l'acheteur l'e-mail « Ta commande est en route ».
+ */
+export async function markShipped(
+  id: string,
+  shipped: boolean,
+  tracking = "",
+): Promise<{ trackingNumber?: string; email?: ShipEmail }> {
   const status: OrderStatus = shipped ? "shipped" : "paid";
   if (catalogBackend.mode === "demo") {
-    writeDemo(readDemo().map((o) => (o.id === id ? { ...o, status } : o)));
-    return;
+    let trackingNumber: string | undefined;
+    writeDemo(
+      readDemo().map((o) => {
+        if (o.id !== id) return o;
+        trackingNumber = (shipped && tracking.trim()) || o.trackingNumber;
+        return { ...o, status, trackingNumber };
+      }),
+    );
+    return { trackingNumber, email: shipped ? "demo" : undefined };
   }
   const sb = await supabase();
-  const { error } = await sb
-    .from("orders")
-    .update({ status, shipped_at: shipped ? new Date().toISOString() : null })
-    .eq("id", id);
-  if (error) throw new Error(`Mise à jour impossible : ${error.message}`);
+  const { data, error } = await sb.functions.invoke("ship-order", { body: { order: id, shipped, tracking } });
+  if (error) {
+    const body = await (error as { context?: Response }).context?.json?.().catch(() => null);
+    throw new Error(body?.message ?? "Mise à jour impossible : la fonction ship-order ne répond pas.");
+  }
+  const res = data as { order: { trackingNumber: string | null }; email?: ShipEmail };
+  return { trackingNumber: res.order.trackingNumber ?? undefined, email: res.email };
 }
