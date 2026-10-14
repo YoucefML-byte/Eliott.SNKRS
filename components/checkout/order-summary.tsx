@@ -36,7 +36,8 @@ export function OrderSummary({
 }) {
   return (
     <div>
-      <ul className="grid gap-4">
+      {/* grid-cols-1 : une colonne qui ne s'élargit pas au-delà du cadre */}
+      <ul className="grid grid-cols-1 gap-4">
         {lines.map((l) => (
           <li key={l.key} className="flex items-center gap-4">
             <div className="relative shrink-0">
@@ -51,9 +52,9 @@ export function OrderSummary({
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm">{l.name}</p>
-              <p className="truncate text-xs text-muted">{l.detail}</p>
+              <p className="text-xs leading-snug text-muted">{l.detail}</p>
             </div>
-            <span className="font-mono text-sm tabular-nums">{formatPrice(l.total)}</span>
+            <span className="shrink-0 font-mono text-sm tabular-nums">{formatPrice(l.total)}</span>
           </li>
         ))}
       </ul>
